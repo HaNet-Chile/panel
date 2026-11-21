@@ -19,4 +19,5 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const enrollmentDb = getFirestore(app, 'hn-enrollmentdata')
 export const calendarDb = getFirestore(app, 'hn-calendar')
-export const functions = getFunctions(app)
+// The functions run in Santiago, next to the databases (hanetcl functions/regions.js).
+export const functions = getFunctions(app, 'southamerica-west1')
