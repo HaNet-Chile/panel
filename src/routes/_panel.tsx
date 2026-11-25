@@ -9,6 +9,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -17,18 +18,19 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { useAuth } from '@/lib/auth'
-import { navItems } from '@/lib/nav'
+import { ROLE_LABEL, useAuth } from '@/lib/auth'
+import { navFor } from '@/lib/nav'
 
 export const Route = createFileRoute('/_panel')({
   beforeLoad: ({ context }) => {
-    if (!context.auth.user) throw redirect({ to: '/login' })
+    // Sin el segundo paso, /login lo pide (las funciones de Administración también lo exigen).
+    if (!context.auth.user || context.auth.secondStep === 'needed') throw redirect({ to: '/login' })
   },
   component: PanelLayout,
 })
 
 function PanelLayout() {
-  const { user, role, logout } = useAuth()
+  const { user, role, courseId, logout } = useAuth()
 
   if (!role) {
     return (
@@ -56,30 +58,33 @@ function PanelLayout() {
           <HanetLogo />
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu className="gap-1">
-              {navItems
-                .filter((item) => item.roles.includes(role))
-                .map((item) => (
+          {navFor(role, courseId).map(group => (
+            <SidebarGroup key={group.label ?? 'inicio'}>
+              {group.label && (
+                <SidebarGroupLabel className="px-3 text-(length:--text-xs) font-medium tracking-wide text-(--text-muted) uppercase">{group.label}</SidebarGroupLabel>
+              )}
+              <SidebarMenu className="gap-1">
+                {group.items.map(item => (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton
                       className="h-10 rounded-(--radius-control) px-3 text-(length:--text-sm) text-(--text-secondary) data-[status=active]:bg-sidebar-accent data-[status=active]:text-(--foreground) data-[status=active]:[&_svg]:text-(--accent)"
-                      render={<Link to={item.to} activeOptions={{ exact: true }} />}
+                      render={<Link to={item.to} activeOptions={{ exact: item.to === '/' }} />}
                     >
                       <item.icon />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-            </SidebarMenu>
-          </SidebarGroup>
+              </SidebarMenu>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
         <SidebarFooter className="gap-3 p-4">
           <div className="flex items-center gap-3 px-1">
             <Avatar name={name} size="sm" />
             <div className="min-w-0">
               <p className="truncate text-(length:--text-sm)">{user?.email}</p>
-              <p className="text-(length:--text-xs) text-(--text-muted)">{role}</p>
+              <p className="text-(length:--text-xs) text-(--text-muted)">{ROLE_LABEL[role]}</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={logout}>
@@ -87,7 +92,7 @@ function PanelLayout() {
           </Button>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="hn-atmosphere">
+      <SidebarInset className="hn-atmosphere min-w-0">
         <header className="flex h-14 items-center px-4 md:hidden">
           <SidebarTrigger aria-label="Abrir menú" />
         </header>

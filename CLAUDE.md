@@ -6,7 +6,9 @@ Panel web para HNT, Admin, Profesor, Directiva y CEE (Firebase `hanet-edu`).
 - Colores: solo los de HaNet. La paleta vive en `src/index.css` (`--hn-*`) y se mapea a los roles de Arc ahí mismo. No uses hex sueltos en componentes; usa los roles (`--accent`, `--surface`, ...).
 - La acción principal (`Button variant="primary"`) es rosa HaNet `#EF2274`, a diferencia del Arc original.
 - El sidebar es el de shadcn (`src/components/ui/sidebar.tsx`); sus variables apuntan a los roles de Arc.
-- El panel llama Cloud Functions existentes; nunca escribe Firestore directo.
+- El panel llama Cloud Functions existentes; nunca escribe Firestore directo (solo lee el Calendar del curso, que las reglas permiten).
+- Entrada: contraseña del HaNet ID y luego el segundo paso obligatorio (`src/components/auth/second-step.tsx`, funciones de `hanetcl/functions/panel-auth.js`): código por correo, app de autenticación o código de respaldo. `_panel` no deja pasar sin `secondStep === 'verified'`; la página Seguridad agrega o quita la app.
+- Menú por áreas (`src/lib/nav.ts`, `navFor`): HaNet Team, Administración (`/institucion`, Admin de su liceo), Docente, Comunidad (eventos, `/directivas` del CEE, Calendar del curso) y Cuenta. Una página nueva entra ahí con sus roles.
 - Repo público: nunca subas secretos ni datos de estudiantes. Deploys de hosting solo con OK del dueño.
 
 ## Producto (decidido por muxp, 2026-10-17)

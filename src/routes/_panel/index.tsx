@@ -1,24 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, Building2, CalendarCheck, Check, KeyRound, Users } from 'lucide-react'
+import { ArrowRight, Check, KeyRound, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Badge } from '@/components/arc/badge/badge'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
 import { InstitutionMark } from '@/components/admin/institution-mark'
-import { useAuth, type PanelRole } from '@/lib/auth'
+import { ROLE_LABEL, useAuth, type PanelRole } from '@/lib/auth'
 import { plural, type AdminInstitution } from '@/lib/hnt-admin'
+import { navFor, type NavItem } from '@/lib/nav'
 import { useInstitutions } from '@/lib/use-institutions'
 
 export const Route = createFileRoute('/_panel/')({
   component: HomePage,
 })
 
-const ROLE_LABEL: Record<PanelRole, string> = {
-  HNT: 'Equipo HaNet',
-  Admin: 'Administración',
-  Profesor: 'Docente',
-  Directiva: 'Directiva de curso',
-  CEE: 'Centro de estudiantes',
-}
 
 function today() {
   const text = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -72,7 +66,7 @@ function HntHome() {
       <section className="flex flex-col gap-4 rounded-(--radius-surface) bg-(--surface) p-6 shadow-(--shadow-raised)">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-(length:--text-lg) font-medium">Por hacer</h2>
-          {todo.length > 0 && <Badge tone="warning" size="sm">{todo.length}</Badge>}
+          {todo.length > 0 && <Badge tone="info" size="sm">{todo.length}</Badge>}
         </div>
         {todo.length === 0 ? (
           <p className="flex items-center gap-2 text-(--text-secondary)">
@@ -123,7 +117,7 @@ function RosterBars({ institutions }: { institutions: AdminInstitution[] }) {
             <span className="flex min-w-0 flex-col gap-1.5">
               <span className="flex items-center gap-2">
                 <span className="truncate font-medium">{item.name}</span>
-                {!item.hasInviteCode && <Badge tone="warning" size="sm">Sin código</Badge>}
+                {!item.hasInviteCode && <Badge size="sm">Sin código</Badge>}
               </span>
               <span className="h-1.5 overflow-hidden rounded-full bg-(--surface-muted)">
                 <span
@@ -140,31 +134,45 @@ function RosterBars({ institutions }: { institutions: AdminInstitution[] }) {
   )
 }
 
+// Qué se hace en cada sección, para las tarjetas del inicio.
+const AREA_COPY: Partial<Record<NavItem['to'], (role: PanelRole, courseId: string | null) => string>> = {
+  '/instituciones': () => 'Instituciones, códigos de invitación, nóminas, roles y módulos.',
+  '/institucion': () => 'Personas y roles de tu liceo, la nómina y el código de invitación.',
+  '/halls': () => 'Anuncios, tareas, material, evaluaciones y notas de tus clases.',
+  '/revisar': () => 'Las entregas que te faltan por revisar, una tras otra.',
+  '/eventos': role => (role === 'HNT' ? 'Eventos de la ciudad y de cada institución, con inscritos.' : 'Los eventos de tu institución y quiénes se inscribieron.'),
+  '/directivas': () => 'Quiénes son la directiva de cada curso.',
+  '/calendario': (_role, courseId) => `Lo que viene en el Calendar de ${courseId ?? 'tu curso'}.`,
+  '/seguridad': () => 'El segundo paso para entrar y tus códigos de respaldo.',
+}
+
 function StaffHome({ role, courseId }: { role: PanelRole | null; courseId: string | null }) {
+  if (!role) return null
+  const groups = navFor(role, courseId).filter(group => group.label)
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {role === 'HNT' && (
-        <AreaLink
-          to="/instituciones"
-          icon={<Building2 aria-hidden="true" className="size-5" />}
-          title="Instituciones y miembros"
-          description="Códigos de invitación, nóminas y roles."
-        />
-      )}
-      <AreaLink
-        to="/calendario"
-        icon={<CalendarCheck aria-hidden="true" className="size-5" />}
-        title="Calendario del curso"
-        description={role === 'Profesor'
-          ? 'Confirma las evaluaciones que publica la directiva.'
-          : `Edita la agenda de ${courseId ?? 'tu curso'}.`}
-      />
+    <div className="flex flex-col gap-8">
+      {groups.map(group => (
+        <section key={group.label} className="flex flex-col gap-3">
+          <h2 className="text-(length:--text-sm) font-medium tracking-wide text-(--text-muted) uppercase">{group.label}</h2>
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr))]">
+            {group.items.map(item => (
+              <AreaLink
+                key={item.to}
+                to={item.to}
+                icon={<item.icon aria-hidden="true" className="size-5" />}
+                title={item.label}
+                description={AREA_COPY[item.to]?.(role, courseId) ?? ''}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }
 
 // Acceso a un área del panel: toda la tarjeta es el link.
-function AreaLink({ to, icon, title, description }: { to: '/instituciones' | '/calendario'; icon: ReactNode; title: string; description: string }) {
+function AreaLink({ to, icon, title, description }: { to: NavItem['to']; icon: ReactNode; title: string; description: string }) {
   return (
     <Link
       to={to}
