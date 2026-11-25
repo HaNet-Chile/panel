@@ -26,7 +26,7 @@ function App() {
   // Re-evaluar los guards de rutas cuando cambia la sesión o el rol.
   useEffect(() => {
     if (auth.ready) router.invalidate()
-  }, [auth.ready, auth.user, auth.role])
+  }, [auth.ready, auth.user, auth.role, auth.secondStep])
   if (!auth.ready) return null
   return <RouterProvider router={router} context={{ auth }} />
 }

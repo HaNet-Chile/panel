@@ -6,7 +6,8 @@ import { MODULES, setInstitutionModules, type AdminInstitution, type ModuleId } 
 import { updateInstitution } from '@/lib/use-institutions'
 
 /** Prender y apagar módulos. Un módulo apagado se apaga en el backend, no solo se esconde. */
-export function ModulesPanel({ institution }: { institution: AdminInstitution }) {
+/** readOnly: la Administración del liceo ve sus módulos; los cambia el equipo HaNet. */
+export function ModulesPanel({ institution, readOnly = false }: { institution: AdminInstitution; readOnly?: boolean }) {
   const active = institution.modules ?? MODULES.map(module => module.id)
   const [busy, setBusy] = useState<ModuleId | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -31,8 +32,9 @@ export function ModulesPanel({ institution }: { institution: AdminInstitution })
     <div className="flex flex-col gap-4">
       <p className="text-(--text-secondary)">
         La base (Calendar, ClassHall y eventos del liceo) siempre está prendida. Un módulo apagado deja de responder en la app para todo el liceo.
+        {readOnly && ' Para prender o apagar uno, escríbele al equipo HaNet a muxp@muxp.art.'}
       </p>
-      {institution.modules == null && (
+      {institution.modules == null && !readOnly && (
         <Alert tone="info" title="Todavía no tiene lista de módulos">Por eso todos están prendidos. Al cambiar uno, se guarda la lista completa.</Alert>
       )}
       <ul className="flex flex-col divide-y divide-(--border-subtle) overflow-hidden rounded-(--radius-surface) bg-(--surface) shadow-(--shadow-raised)">
@@ -45,7 +47,7 @@ export function ModulesPanel({ institution }: { institution: AdminInstitution })
                 <span className="text-(length:--text-sm) text-(--text-secondary)">{module.description}</span>
               </label>
               <span className="w-16 text-right text-(length:--text-sm) text-(--text-secondary)" aria-hidden="true">{on ? 'Prendido' : 'Apagado'}</span>
-              <Switch id={`modulo-${module.id}`} label={module.name} checked={on} disabled={busy !== null} onChange={value => void toggle(module.id, value)} />
+              <Switch id={`modulo-${module.id}`} label={module.name} checked={on} disabled={readOnly || busy !== null} onChange={value => void toggle(module.id, value)} />
             </li>
           )
         })}

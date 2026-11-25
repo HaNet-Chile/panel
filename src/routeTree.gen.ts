@@ -13,10 +13,13 @@ import { Route as PanelRouteImport } from './routes/_panel'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PanelIndexRouteImport } from './routes/_panel/index'
 import { Route as PanelCalendarioRouteImport } from './routes/_panel/calendario'
+import { Route as PanelDirectivasRouteImport } from './routes/_panel/directivas'
 import { Route as PanelEventosRouteRouteImport } from './routes/_panel/eventos/route'
 import { Route as PanelHallsRouteRouteImport } from './routes/_panel/halls/route'
+import { Route as PanelInstitucionRouteImport } from './routes/_panel/institucion'
 import { Route as PanelInstitucionesRouteRouteImport } from './routes/_panel/instituciones/route'
 import { Route as PanelRevisarRouteImport } from './routes/_panel/revisar'
+import { Route as PanelSeguridadRouteImport } from './routes/_panel/seguridad'
 import { Route as PanelEventosIndexRouteImport } from './routes/_panel/eventos/index'
 import { Route as PanelEventosEventIdRouteImport } from './routes/_panel/eventos/$eventId'
 import { Route as PanelHallsIndexRouteImport } from './routes/_panel/halls/index'
@@ -46,6 +49,11 @@ const PanelCalendarioRoute = PanelCalendarioRouteImport.update({
   path: '/calendario',
   getParentRoute: () => PanelRoute,
 } as any)
+const PanelDirectivasRoute = PanelDirectivasRouteImport.update({
+  id: '/directivas',
+  path: '/directivas',
+  getParentRoute: () => PanelRoute,
+} as any)
 const PanelEventosRouteRoute = PanelEventosRouteRouteImport.update({
   id: '/eventos',
   path: '/eventos',
@@ -56,6 +64,11 @@ const PanelHallsRouteRoute = PanelHallsRouteRouteImport.update({
   path: '/halls',
   getParentRoute: () => PanelRoute,
 } as any)
+const PanelInstitucionRoute = PanelInstitucionRouteImport.update({
+  id: '/institucion',
+  path: '/institucion',
+  getParentRoute: () => PanelRoute,
+} as any)
 const PanelInstitucionesRouteRoute = PanelInstitucionesRouteRouteImport.update({
   id: '/instituciones',
   path: '/instituciones',
@@ -64,6 +77,11 @@ const PanelInstitucionesRouteRoute = PanelInstitucionesRouteRouteImport.update({
 const PanelRevisarRoute = PanelRevisarRouteImport.update({
   id: '/revisar',
   path: '/revisar',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelSeguridadRoute = PanelSeguridadRouteImport.update({
+  id: '/seguridad',
+  path: '/seguridad',
   getParentRoute: () => PanelRoute,
 } as any)
 const PanelEventosIndexRoute = PanelEventosIndexRouteImport.update({
@@ -123,7 +141,10 @@ export interface FileRoutesByFullPath {
   '/halls': typeof PanelHallsRouteRouteWithChildren
   '/instituciones': typeof PanelInstitucionesRouteRouteWithChildren
   '/calendario': typeof PanelCalendarioRoute
+  '/directivas': typeof PanelDirectivasRoute
+  '/institucion': typeof PanelInstitucionRoute
   '/revisar': typeof PanelRevisarRoute
+  '/seguridad': typeof PanelSeguridadRoute
   '/eventos/$eventId': typeof PanelEventosEventIdRoute
   '/instituciones/$institutionId': typeof PanelInstitucionesInstitutionIdRoute
   '/eventos/': typeof PanelEventosIndexRoute
@@ -137,7 +158,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/calendario': typeof PanelCalendarioRoute
+  '/directivas': typeof PanelDirectivasRoute
+  '/institucion': typeof PanelInstitucionRoute
   '/revisar': typeof PanelRevisarRoute
+  '/seguridad': typeof PanelSeguridadRoute
   '/': typeof PanelIndexRoute
   '/eventos/$eventId': typeof PanelEventosEventIdRoute
   '/instituciones/$institutionId': typeof PanelInstitucionesInstitutionIdRoute
@@ -157,7 +181,10 @@ export interface FileRoutesById {
   '/_panel/halls': typeof PanelHallsRouteRouteWithChildren
   '/_panel/instituciones': typeof PanelInstitucionesRouteRouteWithChildren
   '/_panel/calendario': typeof PanelCalendarioRoute
+  '/_panel/directivas': typeof PanelDirectivasRoute
+  '/_panel/institucion': typeof PanelInstitucionRoute
   '/_panel/revisar': typeof PanelRevisarRoute
+  '/_panel/seguridad': typeof PanelSeguridadRoute
   '/_panel/': typeof PanelIndexRoute
   '/_panel/eventos/$eventId': typeof PanelEventosEventIdRoute
   '/_panel/instituciones/$institutionId': typeof PanelInstitucionesInstitutionIdRoute
@@ -178,7 +205,10 @@ export interface FileRouteTypes {
     | '/halls'
     | '/instituciones'
     | '/calendario'
+    | '/directivas'
+    | '/institucion'
     | '/revisar'
+    | '/seguridad'
     | '/eventos/$eventId'
     | '/instituciones/$institutionId'
     | '/eventos/'
@@ -192,7 +222,10 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/calendario'
+    | '/directivas'
+    | '/institucion'
     | '/revisar'
+    | '/seguridad'
     | '/'
     | '/eventos/$eventId'
     | '/instituciones/$institutionId'
@@ -211,7 +244,10 @@ export interface FileRouteTypes {
     | '/_panel/halls'
     | '/_panel/instituciones'
     | '/_panel/calendario'
+    | '/_panel/directivas'
+    | '/_panel/institucion'
     | '/_panel/revisar'
+    | '/_panel/seguridad'
     | '/_panel/'
     | '/_panel/eventos/$eventId'
     | '/_panel/instituciones/$institutionId'
@@ -259,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelCalendarioRouteImport
       parentRoute: typeof PanelRoute
     }
+    '/_panel/directivas': {
+      id: '/_panel/directivas'
+      path: '/directivas'
+      fullPath: '/directivas'
+      preLoaderRoute: typeof PanelDirectivasRouteImport
+      parentRoute: typeof PanelRoute
+    }
     '/_panel/eventos': {
       id: '/_panel/eventos'
       path: '/eventos'
@@ -273,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelHallsRouteRouteImport
       parentRoute: typeof PanelRoute
     }
+    '/_panel/institucion': {
+      id: '/_panel/institucion'
+      path: '/institucion'
+      fullPath: '/institucion'
+      preLoaderRoute: typeof PanelInstitucionRouteImport
+      parentRoute: typeof PanelRoute
+    }
     '/_panel/instituciones': {
       id: '/_panel/instituciones'
       path: '/instituciones'
@@ -285,6 +335,13 @@ declare module '@tanstack/react-router' {
       path: '/revisar'
       fullPath: '/revisar'
       preLoaderRoute: typeof PanelRevisarRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/_panel/seguridad': {
+      id: '/_panel/seguridad'
+      path: '/seguridad'
+      fullPath: '/seguridad'
+      preLoaderRoute: typeof PanelSeguridadRouteImport
       parentRoute: typeof PanelRoute
     }
     '/_panel/eventos/': {
@@ -409,7 +466,10 @@ interface PanelRouteChildren {
   PanelHallsRouteRoute: typeof PanelHallsRouteRouteWithChildren
   PanelInstitucionesRouteRoute: typeof PanelInstitucionesRouteRouteWithChildren
   PanelCalendarioRoute: typeof PanelCalendarioRoute
+  PanelDirectivasRoute: typeof PanelDirectivasRoute
+  PanelInstitucionRoute: typeof PanelInstitucionRoute
   PanelRevisarRoute: typeof PanelRevisarRoute
+  PanelSeguridadRoute: typeof PanelSeguridadRoute
   PanelIndexRoute: typeof PanelIndexRoute
 }
 
@@ -418,7 +478,10 @@ const PanelRouteChildren: PanelRouteChildren = {
   PanelHallsRouteRoute: PanelHallsRouteRouteWithChildren,
   PanelInstitucionesRouteRoute: PanelInstitucionesRouteRouteWithChildren,
   PanelCalendarioRoute: PanelCalendarioRoute,
+  PanelDirectivasRoute: PanelDirectivasRoute,
+  PanelInstitucionRoute: PanelInstitucionRoute,
   PanelRevisarRoute: PanelRevisarRoute,
+  PanelSeguridadRoute: PanelSeguridadRoute,
   PanelIndexRoute: PanelIndexRoute,
 }
 

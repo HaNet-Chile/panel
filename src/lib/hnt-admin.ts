@@ -50,7 +50,8 @@ export type Member = {
   rut: string
   fullName: string
   curso: string
-  email: string
+  /** Null para el CEE, que no ve correos ni RUT. */
+  email: string | null
   /** Null mientras la persona no vincula su HaNet ID. */
   uid: string | null
   role: MemberRole | null
@@ -132,8 +133,9 @@ export function importRoster(institutionId: string, rows: RosterRow[]) {
   return call<{ institutionId: string; rows: RosterRow[] }, RosterImportResult>('adminImportRoster')({ institutionId, rows })
 }
 
+/** grants: los roles que quien llama puede dar y quitar (HNT, todos; Admin, hasta Profesor; CEE, Directiva). */
 export function listMembers(institutionId: string) {
-  return call<{ institutionId: string }, { members: Member[]; truncated: boolean }>('adminListMembers')({ institutionId })
+  return call<{ institutionId: string }, { members: Member[]; truncated: boolean; grants?: MemberRole[] }>('adminListMembers')({ institutionId })
 }
 
 export async function setMemberRole(uid: string, role: MemberRole) {

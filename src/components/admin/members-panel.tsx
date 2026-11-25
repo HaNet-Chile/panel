@@ -21,9 +21,9 @@ const ROLE_NOTES: Record<MemberRole, string> = {
   Estudiante: 'Ve el calendario de su curso.',
   Directiva: 'Directiva de curso. Publica en el calendario de su curso.',
   CEE: 'Centro de estudiantes. Publica en el calendario de su curso.',
-  Profesor: 'Docente. Crea Halls en ClassHall y publica en ellos.',
-  Admin: 'Administración de la institución. Publica en el calendario.',
-  HNT: 'Equipo HaNet. Además, entra a este panel.',
+  Profesor: 'Docente. Crea Halls en ClassHall y publica en ellos. Entra al área Docente del panel.',
+  Admin: 'Administración de la institución. Maneja personas, nómina y código en el panel.',
+  HNT: 'Equipo HaNet. Maneja todas las instituciones.',
 }
 
 // La tabla crece de a una página; el buscador encuentra el resto.
@@ -37,8 +37,14 @@ const FILTERS: Record<Filter, (member: Member) => boolean> = {
   bloqueadas: member => !!member.blocked,
 }
 
-export function MembersPanel({ institution }: { institution: AdminInstitution }) {
-  const { user } = useAuth()
+/**
+ * Personas y roles. El equipo HaNet ve todo; la Administración, su liceo
+ * (nombra hasta Profesor); el CEE, solo quiénes vincularon, para nombrar
+ * directivas. El backend decide; esto solo dibuja lo que cada uno puede hacer.
+ */
+export function MembersPanel({ institution }: { institution: Pick<AdminInstitution, 'id'> }) {
+  const { user, role: myRole } = useAuth()
+  const [grants, setGrants] = useState<MemberRole[]>([...MEMBER_ROLES])
   const [members, setMembers] = useState<Member[]>([])
   const [truncated, setTruncated] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -54,18 +60,20 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
     listMembers(institution.id)
       .then(result => {
         if (!active) return
-        setMembers(result.members)
+        // El CEE solo trabaja con quienes ya vincularon (el backend ya los filtra).
+        setMembers(myRole === 'CEE' ? result.members.filter(member => member.uid) : result.members)
         setTruncated(result.truncated)
+        if (result.grants) setGrants(result.grants)
       })
       .catch(failure => { if (active) setError(describeError(failure, 'No pudimos cargar las personas. Inténtalo nuevamente.')) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [attempt, institution.id])
+  }, [attempt, institution.id, myRole])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es')
     return members.filter(member => FILTERS[filter](member)
-      && (!term || `${member.fullName} ${member.curso} ${member.email} ${member.role ?? ''}`.toLocaleLowerCase('es').includes(term)))
+      && (!term || `${member.fullName} ${member.curso} ${member.email ?? ''} ${member.role ?? ''}`.toLocaleLowerCase('es').includes(term)))
   }, [members, search, filter])
 
   const replace = (updated: Member) => {
@@ -82,8 +90,11 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
       </Alert>
     )
   }
+  const cee = myRole === 'CEE'
   if (members.length === 0) {
-    return <EmptyState icon={<Users />} title="La nómina está vacía" description="Cárgala en la pestaña Cargar nómina para que las personas puedan vincularse." />
+    return cee
+      ? <EmptyState icon={<Users />} title="Todavía nadie vinculó su HaNet ID" description="Cuando tus compañeros se vinculen desde la app, aparecerán aquí." />
+      : <EmptyState icon={<Users />} title="La nómina está vacía" description="Cárgala en la pestaña Cargar nómina para que las personas puedan vincularse." />
   }
 
   const linked = members.filter(member => member.uid).length
@@ -92,7 +103,7 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="flex flex-col gap-3 rounded-(--radius-surface) bg-(--surface) p-5 shadow-(--shadow-raised)">
+      {!cee && <section className="flex flex-col gap-3 rounded-(--radius-surface) bg-(--surface) p-5 shadow-(--shadow-raised)">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p><span className="font-heading text-(length:--text-2xl) font-medium tabular-nums">{share}%</span> <span className="text-(--text-secondary)">vinculó su HaNet ID</span></p>
           <p className="text-(length:--text-sm) text-(--text-secondary) tabular-nums">
@@ -102,10 +113,10 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
         <div className="h-2 overflow-hidden rounded-full bg-(--surface-muted)" role="meter" aria-label="Personas vinculadas" aria-valuemin={0} aria-valuemax={members.length} aria-valuenow={linked}>
           <div className="h-full rounded-full bg-(--accent) transition-[width] duration-(--duration-slow) ease-(--ease-enter)" style={{ width: `${share}%` }} />
         </div>
-      </section>
+      </section>}
 
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <SegmentedControl
+        {!cee && <SegmentedControl
           label="Filtrar personas"
           value={filter}
           onValueChange={value => { setFilter(value as Filter); setVisible(PAGE_ROWS) }}
@@ -115,8 +126,8 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
             { value: 'sin-vincular', label: `Sin vincular ${count('sin-vincular')}` },
             { value: 'bloqueadas', label: `Bloqueadas ${count('bloqueadas')}` },
           ]}
-        />
-        <SearchField label="Buscar persona" value={search} onValueChange={value => { setSearch(value); setVisible(PAGE_ROWS) }} placeholder="Nombre, curso, correo o rol" className="w-full sm:w-72" />
+        />}
+        <SearchField label="Buscar persona" value={search} onValueChange={value => { setSearch(value); setVisible(PAGE_ROWS) }} placeholder={cee ? 'Nombre, curso o rol' : 'Nombre, curso, correo o rol'} className="w-full sm:w-72" />
       </div>
 
       <div className="overflow-x-auto rounded-(--radius-surface) bg-(--surface) shadow-(--shadow-raised)">
@@ -125,7 +136,7 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
             <tr>
               <th scope="col" className="px-5 py-3 font-medium">Nombre</th>
               <th scope="col" className="hidden px-5 py-3 font-medium sm:table-cell">Curso</th>
-              <th scope="col" className="hidden px-5 py-3 font-medium md:table-cell">Correo</th>
+              {!cee && <th scope="col" className="hidden px-5 py-3 font-medium md:table-cell">Correo</th>}
               <th scope="col" className="px-5 py-3 font-medium">Rol</th>
             </tr>
           </thead>
@@ -150,7 +161,7 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
                     </span>
                   </td>
                   <td className="hidden px-5 py-3 whitespace-nowrap text-(--text-secondary) sm:table-cell">{member.curso}</td>
-                  <td className="hidden px-5 py-3 text-(--text-secondary) md:table-cell">{member.email}</td>
+                  {!cee && <td className="hidden px-5 py-3 text-(--text-secondary) md:table-cell">{member.email}</td>}
                   <td className="px-5 py-3 whitespace-nowrap"><RoleBadge member={member} /></td>
                 </tr>
               )
@@ -166,7 +177,15 @@ export function MembersPanel({ institution }: { institution: AdminInstitution })
         </Button>
       )}
 
-      <MemberDialog member={selected} isSelf={!!selected && selected.uid === user?.uid} onClose={() => setSelected(null)} onChange={replace} />
+      <MemberDialog
+        member={selected}
+        isSelf={!!selected && selected.uid === user?.uid}
+        grants={grants}
+        canBlock={myRole === 'HNT'}
+        canUnlink={myRole === 'HNT' || myRole === 'Admin'}
+        onClose={() => setSelected(null)}
+        onChange={replace}
+      />
     </div>
   )
 }
@@ -180,9 +199,12 @@ function RoleBadge({ member }: { member: Member }) {
 
 type Confirm = 'block' | 'unlink' | null
 
-function MemberDialog({ member, isSelf, onClose, onChange }: {
+function MemberDialog({ member, isSelf, grants, canBlock, canUnlink, onClose, onChange }: {
   member: Member | null
   isSelf: boolean
+  grants: MemberRole[]
+  canBlock: boolean
+  canUnlink: boolean
   onClose: () => void
   onChange: (member: Member) => void
 }) {
@@ -250,10 +272,13 @@ function MemberDialog({ member, isSelf, onClose, onChange }: {
   }
 
   const role = shown?.role ?? 'Estudiante'
+  // Un rol que no puedes dar tampoco lo puedes quitar (un Admin no cambia a otro Admin).
+  const locked = !grants.includes(role)
+  const unlinkable = canUnlink && !locked
 
   return (
     <Dialog open={!!member} onOpenChange={open => { if (!open) close() }}>
-      <DialogContent title={shown?.fullName ?? ''} description={shown ? `${shown.curso} · ${shown.email}` : undefined}>
+      <DialogContent title={shown?.fullName ?? ''} description={shown ? [shown.curso, shown.email].filter(Boolean).join(' · ') : undefined}>
         {shown && (
           <div className="flex flex-col gap-5">
             {confirm === null && (
@@ -262,17 +287,19 @@ function MemberDialog({ member, isSelf, onClose, onChange }: {
                   label="Rol"
                   value={role}
                   onValueChange={value => void changeRole(value as MemberRole)}
-                  options={MEMBER_ROLES.map(item => ({ value: item, label: item }))}
-                  description={isSelf ? 'No puedes cambiar tu propio rol.' : ROLE_NOTES[role]}
-                  disabled={busy || isSelf}
+                  options={(locked ? [role] : grants).map(item => ({ value: item, label: item }))}
+                  description={isSelf ? 'No puedes cambiar tu propio rol.' : locked ? `${ROLE_NOTES[role]} Este rol lo cambia el equipo HaNet.` : ROLE_NOTES[role]}
+                  disabled={busy || isSelf || locked}
                 />
                 <Alert tone="danger" title="No se guardó el cambio" open={!!error}>{error}</Alert>
-                {!isSelf && (
+                {!isSelf && (unlinkable || canBlock) && (
                   <div className="flex flex-wrap justify-end gap-3">
-                    <Button variant="ghost" onClick={() => { setError(null); setConfirm('unlink') }} disabled={busy}>Desvincular</Button>
-                    <Button variant={shown.blocked ? 'secondary' : 'danger'} onClick={() => { setError(null); setConfirm('block') }} disabled={busy}>
-                      {shown.blocked ? 'Desbloquear cuenta' : 'Bloquear cuenta'}
-                    </Button>
+                    {unlinkable && <Button variant="ghost" onClick={() => { setError(null); setConfirm('unlink') }} disabled={busy}>Desvincular</Button>}
+                    {canBlock && (
+                      <Button variant={shown.blocked ? 'secondary' : 'danger'} onClick={() => { setError(null); setConfirm('block') }} disabled={busy}>
+                        {shown.blocked ? 'Desbloquear cuenta' : 'Bloquear cuenta'}
+                      </Button>
+                    )}
                   </div>
                 )}
               </>

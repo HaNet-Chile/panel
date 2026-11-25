@@ -4,27 +4,29 @@ import { Alert } from '@/components/arc/alert/alert'
 import { Button } from '@/components/arc/button/button'
 import { Input } from '@/components/arc/input/input'
 import { PasswordField } from '@/components/arc/password-field/password-field'
+import { SecondStep } from '@/components/auth/second-step'
 import { HanetLogo } from '@/components/brand/logo'
 import { PANEL_ROLES, useAuth } from '@/lib/auth'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: ({ context }) => {
-    if (context.auth.user) throw redirect({ to: '/' })
+    // Con la contraseña lista pero sin el código, esta misma página pide el segundo paso.
+    if (context.auth.user && context.auth.secondStep !== 'needed') throw redirect({ to: '/' })
   },
   component: LoginPage,
 })
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { user, login, loginAs } = useAuth()
+  const { user, secondStep, login, loginAs } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (user) navigate({ to: '/' })
-  }, [user, navigate])
+    if (user && secondStep !== 'needed') navigate({ to: '/' })
+  }, [user, secondStep, navigate])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -42,10 +44,11 @@ function LoginPage() {
   return (
     <main className="flex min-h-svh items-center justify-center px-4 py-10">
       <section className="flex w-full max-w-sm flex-col gap-6 rounded-(--radius-surface) bg-(--surface) p-8 shadow-(--shadow-raised)">
+        {user && secondStep === 'needed' ? <><HanetLogo /><SecondStep /></> : <>
         <div className="flex flex-col gap-3">
           <HanetLogo />
           <h1 className="text-(length:--text-2xl) leading-tight font-medium tracking-tight">Entra al panel</h1>
-          <p className="text-(--text-secondary)">Usa tu HaNet ID de docente, directiva o equipo HaNet.</p>
+          <p className="text-(--text-secondary)">Usa tu HaNet ID. Después te pediremos un código para confirmar que eres tú.</p>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           <Input label="Correo" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -76,6 +79,7 @@ function LoginPage() {
             </div>
           </div>
         )}
+        </>}
       </section>
     </main>
   )

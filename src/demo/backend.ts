@@ -41,6 +41,8 @@ function findMember(uid: string) {
 
 type Data = Record<string, unknown>
 
+const demoPanel = { totp: false, backup: 0 }
+
 export async function demoCall(name: string, data: unknown): Promise<unknown> {
   await wait()
   const input = (data ?? {}) as Data
@@ -90,6 +92,25 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
       Object.assign(member, { uid: null, role: null, blocked: false })
       return {}
     }
+    // Segundo paso del panel (panel-auth.js). La demo entra ya confirmada.
+    case 'getPanelAuth':
+      return { verified: true, verifiedUntil: Date.now() + 7 * day, totp: demoPanel.totp, backupCodesLeft: demoPanel.totp ? demoPanel.backup : 0, email: 'de****@demo.hanet.muxp.art', institution: null }
+    case 'startPanelTotp':
+      return { secret: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP', uri: 'otpauth://totp/HaNet:demo?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=HaNet' }
+    case 'confirmPanelTotp':
+    case 'newPanelBackupCodes':
+      demoPanel.totp = true
+      demoPanel.backup = 10
+      return { backupCodes: Array.from({ length: 10 }, (_, index) => `demo-${String(2345 + index * 111).slice(0, 4)}`) }
+    case 'disablePanelTotp':
+      demoPanel.totp = false
+      return { totp: false }
+    case 'sendPanelEmailCode':
+      return { sentTo: 'ca****@demo.hanet.muxp.art', minutes: 10, resendInSeconds: 60 }
+    case 'verifyPanelSignIn':
+      return { verified: true, verifiedUntil: Date.now() + 7 * day }
+    case 'endPanelSession':
+      return { ended: true }
     default: {
       const result = classhallCall(name, input) ?? eventsCall(name, input)
       if (result !== undefined) return result
