@@ -1,11 +1,11 @@
 import {
-  Building2, CalendarCheck, CalendarDays, ClipboardCheck, GraduationCap, LayoutDashboard, School, ShieldCheck, UsersRound,
+  Building2, CalendarCheck, Power, CalendarDays, ClipboardCheck, GraduationCap, LayoutDashboard, School, ShieldCheck, UsersRound,
   type LucideIcon,
 } from 'lucide-react'
 import type { PanelRole } from '@/lib/auth'
 
 export type NavItem = {
-  to: '/' | '/instituciones' | '/institucion' | '/directivas' | '/halls' | '/revisar' | '/eventos' | '/calendario' | '/seguridad'
+  to: '/' | '/instituciones' | '/institucion' | '/directivas' | '/halls' | '/revisar' | '/eventos' | '/calendario' | '/seguridad' | '/estado'
   label: string
   icon: LucideIcon
   roles: PanelRole[]
@@ -31,7 +31,10 @@ export const navGroups: NavGroup[] = [
   { label: null, items: [{ to: '/', label: 'Inicio', icon: LayoutDashboard, roles: STAFF_ROLES }] },
   {
     label: 'HaNet Team',
-    items: [{ to: '/instituciones', label: 'Instituciones', icon: Building2, roles: ['HNT'] }],
+    items: [
+      { to: '/instituciones', label: 'Instituciones', icon: Building2, roles: ['HNT'] },
+      { to: '/estado', label: 'Estado de HaNet', icon: Power, roles: ['HNT'] },
+    ],
   },
   {
     label: 'Administración',
