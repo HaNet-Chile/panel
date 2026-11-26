@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PanelIndexRouteImport } from './routes/_panel/index'
 import { Route as PanelCalendarioRouteImport } from './routes/_panel/calendario'
 import { Route as PanelDirectivasRouteImport } from './routes/_panel/directivas'
+import { Route as PanelEstadoRouteImport } from './routes/_panel/estado'
 import { Route as PanelEventosRouteRouteImport } from './routes/_panel/eventos/route'
 import { Route as PanelHallsRouteRouteImport } from './routes/_panel/halls/route'
 import { Route as PanelInstitucionRouteImport } from './routes/_panel/institucion'
@@ -52,6 +53,11 @@ const PanelCalendarioRoute = PanelCalendarioRouteImport.update({
 const PanelDirectivasRoute = PanelDirectivasRouteImport.update({
   id: '/directivas',
   path: '/directivas',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelEstadoRoute = PanelEstadoRouteImport.update({
+  id: '/estado',
+  path: '/estado',
   getParentRoute: () => PanelRoute,
 } as any)
 const PanelEventosRouteRoute = PanelEventosRouteRouteImport.update({
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/instituciones': typeof PanelInstitucionesRouteRouteWithChildren
   '/calendario': typeof PanelCalendarioRoute
   '/directivas': typeof PanelDirectivasRoute
+  '/estado': typeof PanelEstadoRoute
   '/institucion': typeof PanelInstitucionRoute
   '/revisar': typeof PanelRevisarRoute
   '/seguridad': typeof PanelSeguridadRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/calendario': typeof PanelCalendarioRoute
   '/directivas': typeof PanelDirectivasRoute
+  '/estado': typeof PanelEstadoRoute
   '/institucion': typeof PanelInstitucionRoute
   '/revisar': typeof PanelRevisarRoute
   '/seguridad': typeof PanelSeguridadRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/_panel/instituciones': typeof PanelInstitucionesRouteRouteWithChildren
   '/_panel/calendario': typeof PanelCalendarioRoute
   '/_panel/directivas': typeof PanelDirectivasRoute
+  '/_panel/estado': typeof PanelEstadoRoute
   '/_panel/institucion': typeof PanelInstitucionRoute
   '/_panel/revisar': typeof PanelRevisarRoute
   '/_panel/seguridad': typeof PanelSeguridadRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/instituciones'
     | '/calendario'
     | '/directivas'
+    | '/estado'
     | '/institucion'
     | '/revisar'
     | '/seguridad'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/calendario'
     | '/directivas'
+    | '/estado'
     | '/institucion'
     | '/revisar'
     | '/seguridad'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/_panel/instituciones'
     | '/_panel/calendario'
     | '/_panel/directivas'
+    | '/_panel/estado'
     | '/_panel/institucion'
     | '/_panel/revisar'
     | '/_panel/seguridad'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/directivas'
       fullPath: '/directivas'
       preLoaderRoute: typeof PanelDirectivasRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/_panel/estado': {
+      id: '/_panel/estado'
+      path: '/estado'
+      fullPath: '/estado'
+      preLoaderRoute: typeof PanelEstadoRouteImport
       parentRoute: typeof PanelRoute
     }
     '/_panel/eventos': {
@@ -467,6 +486,7 @@ interface PanelRouteChildren {
   PanelInstitucionesRouteRoute: typeof PanelInstitucionesRouteRouteWithChildren
   PanelCalendarioRoute: typeof PanelCalendarioRoute
   PanelDirectivasRoute: typeof PanelDirectivasRoute
+  PanelEstadoRoute: typeof PanelEstadoRoute
   PanelInstitucionRoute: typeof PanelInstitucionRoute
   PanelRevisarRoute: typeof PanelRevisarRoute
   PanelSeguridadRoute: typeof PanelSeguridadRoute
@@ -479,6 +499,7 @@ const PanelRouteChildren: PanelRouteChildren = {
   PanelInstitucionesRouteRoute: PanelInstitucionesRouteRouteWithChildren,
   PanelCalendarioRoute: PanelCalendarioRoute,
   PanelDirectivasRoute: PanelDirectivasRoute,
+  PanelEstadoRoute: PanelEstadoRoute,
   PanelInstitucionRoute: PanelInstitucionRoute,
   PanelRevisarRoute: PanelRevisarRoute,
   PanelSeguridadRoute: PanelSeguridadRoute,

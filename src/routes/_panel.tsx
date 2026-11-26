@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect } from '@tanstack/react-router'
+import { useState } from 'react'
 import { Lock, LogOut } from 'lucide-react'
 import { Avatar } from '@/components/arc/avatar/avatar'
 import { Button } from '@/components/arc/button/button'
@@ -20,6 +21,9 @@ import {
 } from '@/components/ui/sidebar'
 import { ROLE_LABEL, useAuth } from '@/lib/auth'
 import { navFor } from '@/lib/nav'
+import { Alert } from '@/components/arc/alert/alert'
+import { PausedActions, PausedPage } from '@/components/system/paused-page'
+import { useAppStatus } from '@/lib/app-status'
 
 export const Route = createFileRoute('/_panel')({
   beforeLoad: ({ context }) => {
@@ -31,6 +35,8 @@ export const Route = createFileRoute('/_panel')({
 
 function PanelLayout() {
   const { user, role, courseId, logout } = useAuth()
+  const { status, refresh } = useAppStatus()
+  const [retrying, setRetrying] = useState(false)
 
   if (!role) {
     return (
@@ -43,6 +49,30 @@ function PanelLayout() {
             <Button variant="secondary" onClick={logout}>
               Cerrar sesión
             </Button>
+          }
+        />
+      </main>
+    )
+  }
+
+  // HaNet cerrado al público (página Estado): solo el equipo HaNet sigue entrando.
+  if (status && !status.open && role !== 'HNT') {
+    return (
+      <main className="bg-(--background)">
+        <PausedPage
+          status={status}
+          actions={
+            <PausedActions
+              left={{
+                label: retrying ? 'Probando…' : 'Reintentar',
+                disabled: retrying,
+                onClick: () => {
+                  setRetrying(true)
+                  void refresh().finally(() => setRetrying(false))
+                },
+              }}
+              right={{ label: 'Cerrar sesión', onClick: () => void logout() }}
+            />
           }
         />
       </main>
@@ -97,6 +127,11 @@ function PanelLayout() {
           <SidebarTrigger aria-label="Abrir menú" />
         </header>
         <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-10 md:py-12">
+          {status && !status.open && (
+            <Alert tone="warning" title="HaNet está cerrado al público" className="mb-6">
+              Tú entras por ser del equipo HaNet. <Link to="/estado" className="underline">Abrir o cambiar el aviso</Link>
+            </Alert>
+          )}
           <Outlet />
         </div>
       </SidebarInset>
