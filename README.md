@@ -1,7 +1,7 @@
 # HaNet Panel
 
 Panel web para administración y docentes de HaNet. Usa el mismo proyecto de
-Firebase que la app (`hanet-edu`, repo `martinuxp/hanetcl`).
+Firebase que la app (`hanet-edu`, repo `HaNet-Chile/hanetcl`).
 
 ## Stack
 
@@ -37,7 +37,9 @@ El panel no escribe directo en Firestore: usa las funciones del backend
 ## Deploy
 
 Firebase Hosting, sitio `hanet-panel` del proyecto `hanet-edu` (hay que crearlo
-una vez con `firebase hosting:sites:create hanet-panel`).
+una vez con `firebase hosting:sites:create hanet-panel`), con el dominio
+`panel.hanet.muxp.art`. La entrada con Google y los links de Firebase Auth
+viven en `id.hanet.muxp.art` (`authDomain`).
 
 ```bash
 npm run build
