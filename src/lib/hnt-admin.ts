@@ -1,6 +1,7 @@
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
 import { call } from '@/lib/callable'
 import { storage } from '@/lib/firebase'
+import type { AppPauseKind } from '@/lib/app-status'
 
 // Port de hanetcl/services/hnt-admin-service.ts. Todo pasa por las funciones
 // admin* del backend, que exigen el claim HNT en cada llamada.
@@ -16,11 +17,50 @@ export type AdminInstitution = {
   bannerUrl: string | null
   /** Ciudad del liceo (id de src/lib/cities.ts), para el clima del resumen del día. */
   cityId?: string | null
-  /** TEMPORAL hasta mezclar la rama del cierre por liceo (claude/project-thread-x4zdqz). */
-  schoolYear?: { start: string; end: string; secondSemester: string | null } | null
-  closure?: { kind: 'maintenance' | 'incident' | 'closed'; message: string | null; from: number | null; until: number | null; teachers: boolean; active: boolean } | null
   /** Módulos prendidos. Null: la institución todavía no tiene lista, así que todos están prendidos. */
   modules?: ModuleId[] | null
+  /** HaNet cerrado solo en este liceo (ahora, o desde `from`). Null: abierto. */
+  closure?: InstitutionClosure | null
+  /** Primer y último día de clases, y dónde empieza el 2° semestre. */
+  schoolYear?: SchoolYear | null
+}
+
+/**
+ * "Cerrar HaNet en un liceo" (hanetcl functions/institutions.js,
+ * setInstitutionClosure): sus estudiantes, directivas, CEE y (si no se les
+ * deja) docentes ven la pantalla de cierre; HNT y la Administración del liceo
+ * siguen entrando. `until` lo abre solo; `active` dice si ya empezó.
+ */
+export type InstitutionClosure = {
+  kind: AppPauseKind
+  message: string | null
+  from: number | null
+  until: number | null
+  /** Los docentes también entran. */
+  teachers: boolean
+  active: boolean
+}
+
+/** Fechas "AAAA-MM-DD", los días del liceo. */
+export type SchoolYear = { start: string; end: string; secondSemester: string | null }
+
+export type InstitutionClosureInput =
+  | { closed: false }
+  | { closed: true; kind: AppPauseKind; message: string | null; from: number | null; until: number | null; teachers: boolean }
+
+/** Cierra HaNet solo en este liceo, o lo abre. HNT, o la Administración de su liceo. */
+export async function setInstitutionClosure(institutionId: string, input: InstitutionClosureInput) {
+  return (await call<{ institutionId: string } & InstitutionClosureInput, { closure: InstitutionClosure | null }>('setInstitutionClosure')({ institutionId, ...input })).closure
+}
+
+/** El año escolar del liceo; null lo borra. HNT, o la Administración de su liceo. */
+export async function setInstitutionSchoolYear(institutionId: string, schoolYear: SchoolYear | null) {
+  return (await call<{ institutionId: string; schoolYear: SchoolYear | null }, { schoolYear: SchoolYear | null }>('setInstitutionSchoolYear')({ institutionId, schoolYear })).schoolYear
+}
+
+/** Cambia el nombre corto y el completo. Solo HNT; el id no cambia. */
+export async function setInstitutionName(institutionId: string, name: string, fullName: string) {
+  return call<{ institutionId: string; name: string; fullName: string }, { name: string; fullName: string }>('setInstitutionName')({ institutionId, name, fullName })
 }
 
 /** Módulos que se pueden apagar por institución (setInstitutionModules en hanetcl). */
@@ -87,11 +127,6 @@ export async function setInstitutionModules(institutionId: string, modules: Modu
 /** null la quita. Solo HNT (setInstitutionCity en hanetcl). */
 export async function setInstitutionCity(institutionId: string, cityId: string | null) {
   return (await call<{ institutionId: string; cityId: string | null }, { cityId: string | null }>('setInstitutionCity')({ institutionId, cityId })).cityId
-}
-
-/** TEMPORAL hasta mezclar la rama del cierre por liceo (claude/project-thread-x4zdqz). */
-export async function setInstitutionClosure(institutionId: string, closure: { closed: false } | { closed: true; kind: 'maintenance' | 'incident' | 'closed'; message?: string | null; until?: number | null; teachers?: boolean }) {
-  return (await call<Record<string, unknown>, { closure: AdminInstitution['closure'] }>('setInstitutionClosure')({ institutionId, ...closure })).closure
 }
 
 export type BrandingKind = 'logo' | 'banner'

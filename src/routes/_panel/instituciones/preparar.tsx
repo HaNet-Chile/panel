@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Building2, Check } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { BrandingPanel } from '@/components/admin/branding-panel'
+import { SchoolYearPanel } from '@/components/admin/school-year-panel'
 import { RosterPanel } from '@/components/admin/roster-panel'
 import { AdminStep } from '@/components/admin/setup/admin-step'
 import { adminsOf, useSetupMembers } from '@/components/admin/setup/members-store'
@@ -10,7 +11,6 @@ import { DatosStep } from '@/components/admin/setup/datos-step'
 import { ModulesStep } from '@/components/admin/setup/modules-step'
 import { OpenStep } from '@/components/admin/setup/open-step'
 import { SETUP_STEPS, isStepId, nextStep, stepIndex, type SetupStepId } from '@/components/admin/setup/steps'
-import { Alert } from '@/components/arc/alert/alert'
 import { Button } from '@/components/arc/button/button'
 import { EmptyState } from '@/components/arc/empty-state/empty-state'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
@@ -84,8 +84,7 @@ function SetupPage() {
         footer = false
         break
       case 'ano':
-        // Año escolar: SchoolYearPanel del hilo del cierre por liceo, al mezclar su rama.
-        body = <Alert tone="info" title="Próximamente">El año escolar llega con el cierre por liceo.</Alert>
+        body = <SchoolYearPanel institution={institution} />
         break
       case 'modulos':
         body = <ModulesStep key={institution.id} institution={institution} onDone={() => go('marca')} />

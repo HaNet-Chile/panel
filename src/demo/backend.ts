@@ -1,6 +1,7 @@
 // Backend falso del modo demo. Responde con la misma forma que las Cloud
 // Functions reales. Los nombres y RUT son inventados.
-import type { AdminInstitution, Member, MemberRole, RosterRow } from '@/lib/hnt-admin'
+import type { AppPauseKind } from '@/lib/app-status'
+import type { AdminInstitution, Member, MemberRole, RosterRow, SchoolYear } from '@/lib/hnt-admin'
 import { classhallCall } from './classhall'
 import { eventsCall } from './events'
 
@@ -69,17 +70,28 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
       rows.filter(row => row.rut && row.nombres).forEach(row => list.push({ rut: row.rut, fullName: `${row.nombres} ${row.apellidos}`.trim(), curso: row.curso, email: row.email, uid: null, role: null }))
       return { imported, rejected, rejectedCount: rejected.length }
     }
+    case 'setInstitutionClosure': {
+      const item = institutions.find(entry => entry.id === input.institutionId)
+      const closure = input.closed
+        ? { kind: input.kind as AppPauseKind, message: (input.message as string | null) ?? null, from: (input.from as number | null) ?? null, until: (input.until as number | null) ?? null, teachers: input.teachers === true, active: !input.from || Number(input.from) <= Date.now() }
+        : null
+      if (item) item.closure = closure
+      return { closure }
+    }
+    case 'setInstitutionSchoolYear': {
+      const item = institutions.find(entry => entry.id === input.institutionId)
+      if (item) item.schoolYear = (input.schoolYear as SchoolYear | null) ?? null
+      return { schoolYear: input.schoolYear ?? null }
+    }
+    case 'setInstitutionName': {
+      const item = institutions.find(entry => entry.id === input.institutionId)
+      if (item) Object.assign(item, { name: String(input.name), fullName: String(input.fullName) })
+      return { name: input.name, fullName: input.fullName }
+    }
     case 'setInstitutionModules': {
       const item = institutions.find(entry => entry.id === input.institutionId)
       if (item) item.modules = input.modules as AdminInstitution['modules']
       return { modules: input.modules }
-    }
-    // TEMPORAL hasta mezclar la rama del cierre por liceo.
-    case 'setInstitutionClosure': {
-      const item = institutions.find(entry => entry.id === input.institutionId)
-      const closure = input.closed ? { kind: input.kind as 'closed', message: (input.message as string) ?? null, from: null, until: null, teachers: !!input.teachers, active: true } : null
-      if (item) item.closure = closure
-      return { closure }
     }
     case 'setInstitutionCity': {
       const item = institutions.find(entry => entry.id === input.institutionId)

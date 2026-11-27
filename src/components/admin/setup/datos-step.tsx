@@ -3,6 +3,7 @@ import { Alert } from '@/components/arc/alert/alert'
 import { Button } from '@/components/arc/button/button'
 import { Input } from '@/components/arc/input/input'
 import { Select } from '@/components/arc/select/select'
+import { NamePanel } from '@/components/admin/name-panel'
 import { CITIES } from '@/lib/cities'
 import { describeError } from '@/lib/errors'
 import { createInstitution, setInstitutionCity, setInstitutionClosure, type AdminInstitution } from '@/lib/hnt-admin'
@@ -46,6 +47,7 @@ function CreateForm({ onDone }: { onDone: (id: string) => void }) {
         closed: true,
         kind: 'closed',
         message: `Estamos preparando HaNet para ${fullName.trim() || name.trim()}. Te avisamos cuando abra.`,
+        from: null,
         until: null,
         teachers: true,
       }),
@@ -96,11 +98,7 @@ function EditCity({ institution, onDone }: { institution: AdminInstitution; onDo
 
   return (
     <div className="flex flex-col gap-5">
-      {/* NOMBRE: NamePanel del hilo del cierre por liceo, al mezclar su rama. */}
-      <dl className="flex flex-col gap-1">
-        <dt className="text-(length:--text-sm) text-(--text-secondary)">Nombre</dt>
-        <dd className="font-medium">{institution.name}{institution.fullName ? <span className="font-normal text-(--text-secondary)"> · {institution.fullName}</span> : null}</dd>
-      </dl>
+      <NamePanel institution={institution} />
       <div className="sm:max-w-[calc(50%-0.5rem)]">
         <Select label="Ciudad" placeholder="Elige la ciudad" description="Para el clima del resumen del día." options={CITY_OPTIONS} value={cityId} onValueChange={setCityId} disabled={busy} />
       </div>

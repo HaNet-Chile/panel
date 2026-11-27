@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import { BrandingPanel } from '@/components/admin/branding-panel'
+import { ClosurePanel } from '@/components/admin/closure-panel'
 import { CodePanel } from '@/components/admin/code-panel'
 import { InstitutionMark } from '@/components/admin/institution-mark'
 import { MembersPanel } from '@/components/admin/members-panel'
 import { ModulesPanel } from '@/components/admin/modules-panel'
+import { NamePanel } from '@/components/admin/name-panel'
 import { RosterPanel } from '@/components/admin/roster-panel'
+import { SchoolYearPanel } from '@/components/admin/school-year-panel'
 import { Alert } from '@/components/arc/alert/alert'
 import { Button } from '@/components/arc/button/button'
 import { EmptyState } from '@/components/arc/empty-state/empty-state'
@@ -64,13 +67,25 @@ function InstitutionPage() {
           <TabsTrigger value="nomina">Cargar nómina</TabsTrigger>
           <TabsTrigger value="codigo">Código de invitación</TabsTrigger>
           <TabsTrigger value="modulos">Módulos</TabsTrigger>
-          <TabsTrigger value="marca">Escudo y banner</TabsTrigger>
+          <TabsTrigger value="marca">Nombre y escudo</TabsTrigger>
+          <TabsTrigger value="ano">Año y cierre</TabsTrigger>
         </TabsList>
         <TabsContent value="personas"><MembersPanel institution={institution} /></TabsContent>
         <TabsContent value="nomina"><RosterPanel institution={institution} /></TabsContent>
         <TabsContent value="codigo"><CodePanel institution={institution} /></TabsContent>
         <TabsContent value="modulos"><ModulesPanel institution={institution} /></TabsContent>
-        <TabsContent value="marca"><BrandingPanel institution={institution} /></TabsContent>
+        <TabsContent value="marca">
+          <div className="flex flex-col gap-6">
+            <NamePanel key={`${institution.name}|${institution.fullName}`} institution={institution} />
+            <BrandingPanel institution={institution} />
+          </div>
+        </TabsContent>
+        <TabsContent value="ano">
+          <div className="flex flex-col gap-6">
+            <SchoolYearPanel institution={institution} />
+            <ClosurePanel key={institution.closure ? 'cerrado' : 'abierto'} institution={institution} />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   )

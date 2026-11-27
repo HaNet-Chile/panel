@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import arrowIcon from '@/assets/errors/arrow-right.svg'
 import serverIcon from '@/assets/errors/server.svg'
 import sunsetIcon from '@/assets/errors/sea-and-sun.svg'
-import { PAUSE_SCREEN, backAt, type AppStatus } from '@/lib/app-status'
+import { PAUSE_SCREEN, backAt, institutionPauseScreen, opensAt, type AppStatus } from '@/lib/app-status'
 
 const STATUS_PAGE = 'status.hanet.muxp.art'
 
@@ -14,7 +14,9 @@ const STATUS_PAGE = 'status.hanet.muxp.art'
  */
 export function PausedPage({ status, actions, compact = false }: { status: AppStatus; actions?: ReactNode; compact?: boolean }) {
   const kind = status.kind ?? 'maintenance'
-  const copy = PAUSE_SCREEN[kind]
+  // Un solo liceo cerrado: su nombre en el texto, y la página de estado no ayuda ahí (el liceo sí).
+  const institution = typeof status.institutionName === 'string'
+  const copy = institution ? institutionPauseScreen(kind, status.institutionName ?? '') : PAUSE_SCREEN[kind]
   const sunset = kind === 'closed'
   return (
     <div className={`mx-auto flex w-full max-w-[480px] flex-col gap-3 ${compact ? 'p-3' : 'min-h-svh p-3 sm:py-10'}`}>
@@ -32,9 +34,15 @@ export function PausedPage({ status, actions, compact = false }: { status: AppSt
         </div>
       </div>
       <div className="rounded-[32px] bg-(--hn-accent) p-8 text-base leading-normal font-medium text-(--hn-text-on-light)">
-        {status.until ? `${backAt(status.until)} ` : ''}
-        Mantente al tanto de errores e interrupciones de la red HaNet en{' '}
-        <a className="font-bold underline" href={`https://${STATUS_PAGE}`} target="_blank" rel="noreferrer">{STATUS_PAGE}</a>
+        {institution ? (
+          <>{status.until ? `${opensAt(status.until)} ` : ''}Si tienes dudas, pregunta en tu liceo.</>
+        ) : (
+          <>
+            {status.until ? `${backAt(status.until)} ` : ''}
+            Mantente al tanto de errores e interrupciones de la red HaNet en{' '}
+            <a className="font-bold underline" href={`https://${STATUS_PAGE}`} target="_blank" rel="noreferrer">{STATUS_PAGE}</a>
+          </>
+        )}
       </div>
       {actions}
     </div>
