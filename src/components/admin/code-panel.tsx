@@ -11,7 +11,8 @@ function formatDate(millis: number) {
   return new Date(millis).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-export function CodePanel({ institution }: { institution: AdminInstitution }) {
+/** heading: false en el asistente, que ya pone su título. */
+export function CodePanel({ institution, heading = true }: { institution: AdminInstitution; heading?: boolean }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,9 +45,9 @@ export function CodePanel({ institution }: { institution: AdminInstitution }) {
   return (
     <section className="flex flex-col gap-5 rounded-(--radius-surface) bg-(--surface) p-6 shadow-(--shadow-resting)">
       <div className="flex flex-col gap-1">
-        <h2 className="text-(length:--text-lg) font-medium">Código de invitación</h2>
+        {heading && <h2 className="text-(length:--text-lg) font-medium">Código de invitación</h2>}
         <p className="text-(--text-secondary)">
-          Con esta frase, las personas de la nómina se unen a {institution.name} desde la app.{' '}
+          {heading && <>Con esta frase, las personas de la nómina se unen a {institution.name} desde la app.{' '}</>}
           {institution.inviteUpdatedAt ? `El código actual se generó el ${formatDate(institution.inviteUpdatedAt)}.` : 'Todavía no tiene código.'}
         </p>
       </div>

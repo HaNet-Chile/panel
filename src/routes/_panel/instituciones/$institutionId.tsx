@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import { BrandingPanel } from '@/components/admin/branding-panel'
 import { CodePanel } from '@/components/admin/code-panel'
@@ -6,10 +6,13 @@ import { InstitutionMark } from '@/components/admin/institution-mark'
 import { MembersPanel } from '@/components/admin/members-panel'
 import { ModulesPanel } from '@/components/admin/modules-panel'
 import { RosterPanel } from '@/components/admin/roster-panel'
+import { Alert } from '@/components/arc/alert/alert'
+import { Button } from '@/components/arc/button/button'
 import { EmptyState } from '@/components/arc/empty-state/empty-state'
+import { missingSteps } from '@/components/admin/setup/steps'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/arc/tabs/tabs'
-import { plural } from '@/lib/hnt-admin'
+import { plural, type AdminInstitution } from '@/lib/hnt-admin'
 import { useInstitutions } from '@/lib/use-institutions'
 
 export const Route = createFileRoute('/_panel/instituciones/$institutionId')({
@@ -53,6 +56,8 @@ function InstitutionPage() {
         </div>
       </div>
 
+      <SetupNotice institution={institution} />
+
       <Tabs defaultValue="personas">
         <TabsList aria-label="Secciones de la institución">
           <TabsTrigger value="personas">Personas y roles</TabsTrigger>
@@ -68,5 +73,27 @@ function InstitutionPage() {
         <TabsContent value="marca"><BrandingPanel institution={institution} /></TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+/** Mientras falte algo del asistente (o siga cerrada para prepararla), un atajo para seguir. */
+function SetupNotice({ institution }: { institution: AdminInstitution }) {
+  const navigate = useNavigate()
+  const missing = missingSteps(institution)
+  const closed = !!institution.closure?.active
+  if (missing.length === 0 && !closed) return null
+  const title = missing.length === 0
+    ? 'Lista para abrir'
+    : missing.length === 1 ? 'Falta 1 paso para dejarla lista' : `Faltan ${missing.length} pasos para dejarla lista`
+  return (
+    <Alert tone={missing.length ? 'info' : 'warning'} title={title}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span>
+          {missing.length ? missing.map(step => step.label).join(', ') + '.' : ''}
+          {closed ? ` HaNet sigue cerrado para ${institution.name}.` : ''}
+        </span>
+        <Button size="sm" variant="secondary" onClick={() => void navigate({ to: '/instituciones/preparar', search: { id: institution.id } })}>Continuar</Button>
+      </div>
+    </Alert>
   )
 }

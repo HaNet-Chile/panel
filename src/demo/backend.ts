@@ -8,7 +8,7 @@ const now = Date.now()
 const day = 86_400_000
 
 const institutions: AdminInstitution[] = [
-  { id: 'lch', name: 'LCH Temuco', fullName: 'Liceo Camilo Henríquez de Temuco', rosterCount: 1184, hasInviteCode: true, inviteUpdatedAt: now - 9 * day, logoUrl: null, bannerUrl: null, modules: ['feed', 'polls', 'alliances', 'electividad', 'grades'] },
+  { id: 'lch', name: 'LCH Temuco', fullName: 'Liceo Camilo Henríquez de Temuco', rosterCount: 1184, hasInviteCode: true, inviteUpdatedAt: now - 9 * day, logoUrl: null, bannerUrl: null, cityId: 'temuco', modules: ['feed', 'polls', 'alliances', 'electividad', 'grades'] },
   { id: 'insuco', name: 'Insuco Padre Las Casas', fullName: 'Instituto Comercial de Padre Las Casas', rosterCount: 742, hasInviteCode: true, inviteUpdatedAt: now - 30 * day, logoUrl: null, bannerUrl: null },
   { id: 'araucania', name: 'Colegio Araucanía Verde', fullName: 'Colegio Araucanía Verde', rosterCount: 315, hasInviteCode: false, inviteUpdatedAt: null, logoUrl: null, bannerUrl: null },
   { id: 'pehuen', name: 'Colegio Valle Pehuén', fullName: 'Colegio Valle Pehuén', rosterCount: 0, hasInviteCode: false, inviteUpdatedAt: null, logoUrl: null, bannerUrl: null, modules: ['feed'] },
@@ -74,6 +74,11 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
       if (item) item.modules = input.modules as AdminInstitution['modules']
       return { modules: input.modules }
     }
+    case 'setInstitutionCity': {
+      const item = institutions.find(entry => entry.id === input.institutionId)
+      if (item) item.cityId = (input.cityId as string | null) ?? null
+      return { cityId: input.cityId ?? null }
+    }
     case 'adminSetInstitutionBranding': {
       const item = institutions.find(entry => entry.id === input.institutionId)
       if (item) item[input.kind === 'logo' ? 'logoUrl' : 'bannerUrl'] = (input.url as string | null) ?? null
@@ -84,6 +89,12 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
     case 'adminSetRole':
       findMember(String(input.uid)).role = input.role as MemberRole
       return {}
+    case 'adminSetPendingRole': {
+      const member = (members[String(input.institutionId)] ?? []).find(item => item.rut.replace(/[^0-9kK]/g, '').toUpperCase() === input.rut)
+      if (!member) throw Object.assign(new Error('Esa persona no está en la nómina.'), { code: 'functions/not-found' })
+      member.pendingRole = (input.role as MemberRole | null) ?? null
+      return { pendingRole: member.pendingRole }
+    }
     case 'adminSetBlocked':
       findMember(String(input.uid)).blocked = Boolean(input.blocked)
       return {}
