@@ -6,7 +6,7 @@ import { Button } from '@/components/arc/button/button'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { setInstitutionClosure, type AdminInstitution } from '@/lib/hnt-admin'
 import { updateInstitution } from '@/lib/use-institutions'
-import { adminsOf, useSetupMembers } from './admin-step'
+import { adminsOf, useSetupMembers } from './members-store'
 import { SETUP_STEPS, missingSteps, type SetupStepId } from './steps'
 
 /** Último paso: qué quedó hecho y el botón para abrir HaNet al liceo. */

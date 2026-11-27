@@ -2,9 +2,10 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Building2, Check } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { BrandingPanel } from '@/components/admin/branding-panel'
-import { CodePanel } from '@/components/admin/code-panel'
 import { RosterPanel } from '@/components/admin/roster-panel'
-import { AdminStep, adminsOf, useSetupMembers } from '@/components/admin/setup/admin-step'
+import { AdminStep } from '@/components/admin/setup/admin-step'
+import { adminsOf, useSetupMembers } from '@/components/admin/setup/members-store'
+import { CodeStep } from '@/components/admin/setup/code-step'
 import { DatosStep } from '@/components/admin/setup/datos-step'
 import { ModulesStep } from '@/components/admin/setup/modules-step'
 import { OpenStep } from '@/components/admin/setup/open-step'
@@ -33,7 +34,7 @@ const INTRO: Record<SetupStepId, string> = {
   marca: 'Se ven en el inicio de la app, al vincular la cuenta y en los correos. Puedes subirlos después.',
   nomina: 'Estudiantes, docentes y administración, con su correo institucional. Docentes y administración van con el curso "Docente". Se puede cargar por partes.',
   admin: 'Quién administrará el liceo desde el panel. Si todavía no se une a HaNet, el rol se le pone solo cuando se vincule con su correo institucional.',
-  codigo: 'Con esta frase, las personas de la nómina se unen desde la app. Mándasela a la administración del liceo.',
+  codigo: 'Con esta frase, las personas de la nómina se unen desde la app. Al generarla se descarga la inscripción en PDF para la administración del liceo.',
   abrir: 'Revisa lo que quedó listo y abre HaNet al liceo.',
 }
 
@@ -100,7 +101,7 @@ function SetupPage() {
         body = <AdminStep institution={institution} />
         break
       case 'codigo':
-        body = <CodePanel institution={institution} heading={false} />
+        body = <CodeStep institution={institution} />
         break
       case 'abrir':
         body = <OpenStep institution={institution} onGo={go} />

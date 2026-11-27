@@ -11,8 +11,11 @@ function formatDate(millis: number) {
   return new Date(millis).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-/** heading: false en el asistente, que ya pone su título. */
-export function CodePanel({ institution, heading = true }: { institution: AdminInstitution; heading?: boolean }) {
+/**
+ * heading: false en el asistente, que ya pone su título.
+ * onGenerated: recibe la frase nueva (la única vez que existe), para el PDF de inscripción.
+ */
+export function CodePanel({ institution, heading = true, onGenerated }: { institution: AdminInstitution; heading?: boolean; onGenerated?: (words: string[], at: number) => void }) {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -23,8 +26,10 @@ export function CodePanel({ institution, heading = true }: { institution: AdminI
     setBusy(true)
     setError(null)
     try {
-      setWords(await rotateInviteCode(institution.id))
+      const next = await rotateInviteCode(institution.id)
+      setWords(next)
       setConfirming(false)
+      onGenerated?.(next, Date.now())
       void reloadInstitutions()
     } catch (failure) {
       setError(describeError(failure, 'No pudimos generar el código.'))

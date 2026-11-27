@@ -24,7 +24,7 @@ export const SETUP_STEPS: SetupStep[] = [
   { id: 'marca', label: 'Escudo y banner', optional: true, done: institution => !!institution?.logoUrl },
   { id: 'nomina', label: 'Nómina', done: institution => (institution?.rosterCount ?? 0) > 0 },
   { id: 'admin', label: 'Primer administrador', done: (_institution, extra) => (extra?.admins ?? 0) > 0 },
-  { id: 'codigo', label: 'Código de invitación', done: institution => !!institution?.hasInviteCode },
+  { id: 'codigo', label: 'Código e inscripción', done: institution => !!institution?.hasInviteCode },
   { id: 'abrir', label: 'Revisar y abrir', done: institution => !!institution && !institution.closure?.active },
 ]
 

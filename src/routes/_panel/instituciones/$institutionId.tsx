@@ -86,14 +86,12 @@ function SetupNotice({ institution }: { institution: AdminInstitution }) {
     ? 'Lista para abrir'
     : missing.length === 1 ? 'Falta 1 paso para dejarla lista' : `Faltan ${missing.length} pasos para dejarla lista`
   return (
-    <Alert tone={missing.length ? 'info' : 'warning'} title={title}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span>
-          {missing.length ? missing.map(step => step.label).join(', ') + '.' : ''}
-          {closed ? ` HaNet sigue cerrado para ${institution.name}.` : ''}
-        </span>
-        <Button size="sm" variant="secondary" onClick={() => void navigate({ to: '/instituciones/preparar', search: { id: institution.id } })}>Continuar</Button>
-      </div>
-    </Alert>
+    <div className="flex flex-col gap-3">
+      <Alert tone={missing.length ? 'info' : 'warning'} title={title}>
+        {missing.length ? missing.map(step => step.label).join(', ') + '.' : ''}
+        {closed ? ` HaNet sigue cerrado para ${institution.name}.` : ''}
+      </Alert>
+      <Button size="sm" variant="secondary" className="self-start" onClick={() => void navigate({ to: '/instituciones/preparar', search: { id: institution.id } })}>Continuar la preparación</Button>
+    </div>
   )
 }

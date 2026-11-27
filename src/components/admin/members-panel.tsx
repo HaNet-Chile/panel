@@ -192,6 +192,8 @@ export function MembersPanel({ institution }: { institution: Pick<AdminInstituti
 
 function RoleBadge({ member }: { member: Member }) {
   if (member.blocked) return <Badge tone="warning" size="sm">Bloqueada</Badge>
+  // Rol que se le pone al vincularse (lo deja el asistente de institución nueva).
+  if (!member.uid && member.pendingRole) return <Badge tone="info" size="sm">{member.pendingRole} al unirse</Badge>
   if (!member.uid) return <span className="text-(length:--text-sm) text-(--text-muted)">Sin vincular</span>
   // Estudiante es lo común; los demás roles tienen permisos y se marcan.
   return <Badge tone={member.role === 'Estudiante' ? 'neutral' : 'info'} size="sm">{member.role}</Badge>

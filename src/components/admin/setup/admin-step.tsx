@@ -1,63 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert } from '@/components/arc/alert/alert'
 import { Badge } from '@/components/arc/badge/badge'
 import { Button } from '@/components/arc/button/button'
 import { SearchField } from '@/components/arc/search-field/search-field'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
 import { describeError } from '@/lib/errors'
-import { listMembers, setMemberRole, setPendingRole, type AdminInstitution, type Member } from '@/lib/hnt-admin'
+import { setMemberRole, setPendingRole, type AdminInstitution, type Member } from '@/lib/hnt-admin'
+import { adminsOf, isStaffRow, loadSetupMembers, useSetupMembers } from './members-store'
 
 // Quién será Admin del liceo. Si todavía no se une, el rol queda esperando en
 // la nómina y se lo pone el backend al vincularse (adminSetPendingRole).
-
-type Entry = { members: Member[]; error: string | null; rosterCount: number }
-type Store = Map<string, Entry>
-let store: Store = new Map()
-const listeners = new Set<() => void>()
-
-function put(institutionId: string, value: Entry) {
-  store = new Map(store).set(institutionId, value)
-  listeners.forEach(listener => listener())
-}
-
-const loading = new Set<string>()
-
-/** rosterCount: el tamaño de la nómina al cargar, para volver a leerla si cambia. */
-export async function loadSetupMembers(institutionId: string, rosterCount: number) {
-  if (loading.has(institutionId)) return
-  loading.add(institutionId)
-  try {
-    put(institutionId, { members: (await listMembers(institutionId)).members, error: null, rosterCount })
-  } catch (failure) {
-    put(institutionId, { members: store.get(institutionId)?.members ?? [], error: describeError(failure, 'No pudimos cargar la nómina.'), rosterCount })
-  } finally {
-    loading.delete(institutionId)
-  }
-}
-
-/** Personas de la nómina para el asistente. Se vuelven a leer si la nómina cambió de tamaño. */
-export function useSetupMembers(institution: AdminInstitution | undefined) {
-  const institutionId = institution?.id
-  const rosterCount = institution?.rosterCount ?? 0
-  const snapshot = useSyncExternalStore(
-    useCallback((listener: () => void) => {
-      listeners.add(listener)
-      return () => listeners.delete(listener)
-    }, []),
-    () => store,
-  )
-  useEffect(() => {
-    if (institutionId && store.get(institutionId)?.rosterCount !== rosterCount) void loadSetupMembers(institutionId, rosterCount)
-  }, [institutionId, rosterCount])
-  return institutionId ? snapshot.get(institutionId) ?? null : null
-}
-
-/** Quienes ya son Admin o lo serán al unirse. */
-export function adminsOf(members: Member[]) {
-  return members.filter(member => member.role === 'Admin' || member.pendingRole === 'Admin')
-}
-
-const isStaffRow = (member: Member) => member.curso.trim().toLocaleLowerCase('es') === 'docente'
 
 export function AdminStep({ institution }: { institution: AdminInstitution }) {
   const loaded = useSetupMembers(institution)
