@@ -14,7 +14,7 @@ export function OpenStep({ institution, onGo }: { institution: AdminInstitution;
   const navigate = useNavigate()
   const [confirming, setConfirming] = useState(false)
   const [opened, setOpened] = useState(false)
-  const members = useSetupMembers(institution.id)?.members ?? null
+  const members = useSetupMembers(institution)?.members ?? null
   const admins = members ? adminsOf(members) : null
   const extra = { admins: admins?.length ?? null }
   const missing = missingSteps(institution, extra)

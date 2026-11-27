@@ -10,25 +10,35 @@ import { listMembers, setMemberRole, setPendingRole, type AdminInstitution, type
 // Quién será Admin del liceo. Si todavía no se une, el rol queda esperando en
 // la nómina y se lo pone el backend al vincularse (adminSetPendingRole).
 
-type Store = Map<string, { members: Member[]; error: string | null }>
+type Entry = { members: Member[]; error: string | null; rosterCount: number }
+type Store = Map<string, Entry>
 let store: Store = new Map()
 const listeners = new Set<() => void>()
 
-function put(institutionId: string, value: { members: Member[]; error: string | null }) {
+function put(institutionId: string, value: Entry) {
   store = new Map(store).set(institutionId, value)
   listeners.forEach(listener => listener())
 }
 
-export async function loadSetupMembers(institutionId: string) {
+const loading = new Set<string>()
+
+/** rosterCount: el tamaño de la nómina al cargar, para volver a leerla si cambia. */
+export async function loadSetupMembers(institutionId: string, rosterCount: number) {
+  if (loading.has(institutionId)) return
+  loading.add(institutionId)
   try {
-    put(institutionId, { members: (await listMembers(institutionId)).members, error: null })
+    put(institutionId, { members: (await listMembers(institutionId)).members, error: null, rosterCount })
   } catch (failure) {
-    put(institutionId, { members: store.get(institutionId)?.members ?? [], error: describeError(failure, 'No pudimos cargar la nómina.') })
+    put(institutionId, { members: store.get(institutionId)?.members ?? [], error: describeError(failure, 'No pudimos cargar la nómina.'), rosterCount })
+  } finally {
+    loading.delete(institutionId)
   }
 }
 
-/** Personas de la nómina para el asistente, cargadas una vez por institución. */
-export function useSetupMembers(institutionId: string | undefined) {
+/** Personas de la nómina para el asistente. Se vuelven a leer si la nómina cambió de tamaño. */
+export function useSetupMembers(institution: AdminInstitution | undefined) {
+  const institutionId = institution?.id
+  const rosterCount = institution?.rosterCount ?? 0
   const snapshot = useSyncExternalStore(
     useCallback((listener: () => void) => {
       listeners.add(listener)
@@ -37,8 +47,8 @@ export function useSetupMembers(institutionId: string | undefined) {
     () => store,
   )
   useEffect(() => {
-    if (institutionId && !store.has(institutionId)) void loadSetupMembers(institutionId)
-  }, [institutionId])
+    if (institutionId && store.get(institutionId)?.rosterCount !== rosterCount) void loadSetupMembers(institutionId, rosterCount)
+  }, [institutionId, rosterCount])
   return institutionId ? snapshot.get(institutionId) ?? null : null
 }
 
@@ -50,7 +60,7 @@ export function adminsOf(members: Member[]) {
 const isStaffRow = (member: Member) => member.curso.trim().toLocaleLowerCase('es') === 'docente'
 
 export function AdminStep({ institution }: { institution: AdminInstitution }) {
-  const loaded = useSetupMembers(institution.id)
+  const loaded = useSetupMembers(institution)
   const [search, setSearch] = useState('')
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +82,7 @@ export function AdminStep({ institution }: { institution: AdminInstitution }) {
     try {
       if (member.uid) await setMemberRole(member.uid, admin ? 'Admin' : 'Profesor')
       else await setPendingRole(institution.id, member.rut, admin ? 'Admin' : null)
-      await loadSetupMembers(institution.id)
+      await loadSetupMembers(institution.id, institution.rosterCount)
     } catch (failure) {
       setError(describeError(failure, 'No pudimos guardar el rol.'))
     } finally {

@@ -42,7 +42,7 @@ function SetupPage() {
   const navigate = useNavigate({ from: Route.fullPath })
   const { institutions, loaded } = useInstitutions()
   const institution = id ? institutions.find(item => item.id === id) : undefined
-  const members = useSetupMembers(institution?.id)?.members ?? null
+  const members = useSetupMembers(institution)?.members ?? null
   const extra = { admins: members ? adminsOf(members).length : null }
 
   const go = (step: SetupStepId, institutionId = id) => void navigate({ search: { id: institutionId, paso: step } })
@@ -130,7 +130,7 @@ function SetupPage() {
           {/* En el teléfono, una barra de avance; en el computador, la lista de pasos. */}
           <div className="flex gap-1 lg:hidden" aria-hidden="true">
             {SETUP_STEPS.map((item, position) => (
-              <span key={item.id} className={`h-1 flex-1 rounded-full ${position <= index || item.done(institution, extra) ? 'bg-(--accent)' : 'bg-(--surface-muted)'}`} />
+              <span key={item.id} className={`h-1 flex-1 rounded-full ${item.done(institution, extra) ? 'bg-(--accent)' : position === index ? 'bg-(--foreground)' : 'bg-(--surface-muted)'}`} />
             ))}
           </div>
           <ol className="hidden flex-col gap-0.5 lg:flex">

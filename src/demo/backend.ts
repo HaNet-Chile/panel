@@ -74,6 +74,13 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
       if (item) item.modules = input.modules as AdminInstitution['modules']
       return { modules: input.modules }
     }
+    // TEMPORAL hasta mezclar la rama del cierre por liceo.
+    case 'setInstitutionClosure': {
+      const item = institutions.find(entry => entry.id === input.institutionId)
+      const closure = input.closed ? { kind: input.kind as 'closed', message: (input.message as string) ?? null, from: null, until: null, teachers: !!input.teachers, active: true } : null
+      if (item) item.closure = closure
+      return { closure }
+    }
     case 'setInstitutionCity': {
       const item = institutions.find(entry => entry.id === input.institutionId)
       if (item) item.cityId = (input.cityId as string | null) ?? null
@@ -90,7 +97,7 @@ export async function demoCall(name: string, data: unknown): Promise<unknown> {
       findMember(String(input.uid)).role = input.role as MemberRole
       return {}
     case 'adminSetPendingRole': {
-      const member = (members[String(input.institutionId)] ?? []).find(item => item.rut.replace(/[^0-9kK]/g, '').toUpperCase() === input.rut)
+      const member = (members[String(input.institutionId)] ?? []).find(item => item.rut.replace(/[^0-9kK]/g, '').toUpperCase() === String(input.rut).replace(/[^0-9kK]/g, '').toUpperCase())
       if (!member) throw Object.assign(new Error('Esa persona no está en la nómina.'), { code: 'functions/not-found' })
       member.pendingRole = (input.role as MemberRole | null) ?? null
       return { pendingRole: member.pendingRole }
