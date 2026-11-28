@@ -1,10 +1,12 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { School } from 'lucide-react'
+import { ClosurePanel } from '@/components/admin/closure-panel'
 import { CodePanel } from '@/components/admin/code-panel'
 import { InstitutionMark } from '@/components/admin/institution-mark'
 import { MembersPanel } from '@/components/admin/members-panel'
 import { ModulesPanel } from '@/components/admin/modules-panel'
 import { RosterPanel } from '@/components/admin/roster-panel'
+import { SchoolYearPanel } from '@/components/admin/school-year-panel'
 import { Alert } from '@/components/arc/alert/alert'
 import { EmptyState } from '@/components/arc/empty-state/empty-state'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
@@ -58,11 +60,18 @@ function MyInstitutionPage() {
           <TabsTrigger value="nomina">Cargar nómina</TabsTrigger>
           <TabsTrigger value="codigo">Código de invitación</TabsTrigger>
           <TabsTrigger value="modulos">Módulos</TabsTrigger>
+          <TabsTrigger value="ano">Año y cierre</TabsTrigger>
         </TabsList>
         <TabsContent value="personas"><MembersPanel institution={institution} /></TabsContent>
         <TabsContent value="nomina"><RosterPanel institution={institution} /></TabsContent>
         <TabsContent value="codigo"><CodePanel institution={institution} /></TabsContent>
         <TabsContent value="modulos"><ModulesPanel institution={institution} readOnly /></TabsContent>
+        <TabsContent value="ano">
+          <div className="flex flex-col gap-6">
+            <SchoolYearPanel institution={institution} />
+            <ClosurePanel key={institution.closure ? 'cerrado' : 'abierto'} institution={institution} />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   )

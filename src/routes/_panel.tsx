@@ -23,7 +23,7 @@ import { ROLE_LABEL, useAuth } from '@/lib/auth'
 import { navFor } from '@/lib/nav'
 import { Alert } from '@/components/arc/alert/alert'
 import { PausedActions, PausedPage } from '@/components/system/paused-page'
-import { useAppStatus } from '@/lib/app-status'
+import { closureAsStatus, passesInstitutionClosure, useAppStatus } from '@/lib/app-status'
 
 export const Route = createFileRoute('/_panel')({
   beforeLoad: ({ context }) => {
@@ -34,8 +34,8 @@ export const Route = createFileRoute('/_panel')({
 })
 
 function PanelLayout() {
-  const { user, role, courseId, logout } = useAuth()
-  const { status, refresh } = useAppStatus()
+  const { user, role, courseId, logout, panel } = useAuth()
+  const { status, refresh } = useAppStatus(role === 'HNT' ? null : panel?.institution?.id)
   const [retrying, setRetrying] = useState(false)
 
   if (!role) {
@@ -55,12 +55,14 @@ function PanelLayout() {
     )
   }
 
-  // HaNet cerrado al público (página Estado): solo el equipo HaNet sigue entrando.
-  if (status && !status.open && role !== 'HNT') {
+  // HaNet cerrado al público (página Estado): solo el equipo HaNet sigue
+  // entrando. Cerrado en el liceo: también su Administración (y sus docentes, si el cierre lo dice).
+  const closedHere = status?.institution?.closed && !passesInstitutionClosure(role, status.institution) ? status.institution : null
+  if (status && ((!status.open && role !== 'HNT') || closedHere)) {
     return (
       <main className="bg-(--background)">
         <PausedPage
-          status={status}
+          status={!status.open ? status : closureAsStatus(closedHere!)}
           actions={
             <PausedActions
               left={{
