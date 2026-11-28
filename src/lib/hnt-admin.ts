@@ -15,6 +15,8 @@ export type AdminInstitution = {
   inviteUpdatedAt: number | null
   logoUrl: string | null
   bannerUrl: string | null
+  /** Ciudad del liceo (id de src/lib/cities.ts), para el clima del resumen del día. */
+  cityId?: string | null
   /** Módulos prendidos. Null: la institución todavía no tiene lista, así que todos están prendidos. */
   modules?: ModuleId[] | null
   /** HaNet cerrado solo en este liceo (ahora, o desde `from`). Null: abierto. */
@@ -100,6 +102,8 @@ export type Member = {
   role: MemberRole | null
   /** Bloqueada por romper los términos: no puede entrar a HaNet. */
   blocked?: boolean
+  /** Rol que recibe al vincularse (solo mientras no se ha vinculado). */
+  pendingRole?: MemberRole | null
 }
 
 
@@ -118,6 +122,11 @@ export async function rotateInviteCode(institutionId: string) {
 
 export async function setInstitutionModules(institutionId: string, modules: ModuleId[]) {
   return (await call<{ institutionId: string; modules: ModuleId[] }, { modules: ModuleId[] }>('setInstitutionModules')({ institutionId, modules })).modules
+}
+
+/** null la quita. Solo HNT (setInstitutionCity en hanetcl). */
+export async function setInstitutionCity(institutionId: string, cityId: string | null) {
+  return (await call<{ institutionId: string; cityId: string | null }, { cityId: string | null }>('setInstitutionCity')({ institutionId, cityId })).cityId
 }
 
 export type BrandingKind = 'logo' | 'banner'
@@ -183,6 +192,11 @@ export function listMembers(institutionId: string) {
 
 export async function setMemberRole(uid: string, role: MemberRole) {
   await call('adminSetRole')({ uid, role })
+}
+
+/** Deja un rol esperando en la nómina: se lo pone al vincularse. null lo quita. */
+export async function setPendingRole(institutionId: string, rut: string, role: MemberRole | null) {
+  return (await call<{ institutionId: string; rut: string; role: MemberRole | null }, { pendingRole: MemberRole | null }>('adminSetPendingRole')({ institutionId, rut, role })).pendingRole
 }
 
 export async function setMemberBlocked(uid: string, blocked: boolean) {

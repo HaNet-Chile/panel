@@ -14,7 +14,8 @@ const COLUMNS = [
   ['email', 'Correo'],
 ] as const
 
-export function RosterPanel({ institution }: { institution: AdminInstitution }) {
+/** heading: false en el asistente, que ya pone su título. */
+export function RosterPanel({ institution, heading = true }: { institution: AdminInstitution; heading?: boolean }) {
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,12 +42,13 @@ export function RosterPanel({ institution }: { institution: AdminInstitution }) 
 
   return (
     <section className="flex flex-col gap-5 rounded-(--radius-surface) bg-(--surface) p-6 shadow-(--shadow-resting)">
-      <div className="flex flex-col gap-1">
+      {heading && <div className="flex flex-col gap-1">
         <h2 className="text-(length:--text-lg) font-medium">Cargar nómina</h2>
         <p className="text-(--text-secondary)">
           Copia las filas desde Excel o Sheets y pégalas aquí, una persona por línea, con las columnas en este orden: RUT, nombres, apellidos, curso y correo institucional.
         </p>
-      </div>
+      </div>}
+      {!heading && <p className="text-(--text-secondary)">Copia las filas desde Excel o Sheets y pégalas aquí, una persona por línea: RUT, nombres, apellidos, curso y correo institucional.</p>}
 
       <Textarea
         label="Filas de la planilla"

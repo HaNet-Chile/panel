@@ -1,17 +1,14 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Building2, ChevronRight } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert } from '@/components/arc/alert/alert'
 import { Badge } from '@/components/arc/badge/badge'
 import { Button } from '@/components/arc/button/button'
-import { Dialog, DialogContent } from '@/components/arc/dialog/dialog'
 import { EmptyState } from '@/components/arc/empty-state/empty-state'
-import { Input } from '@/components/arc/input/input'
 import { SearchField } from '@/components/arc/search-field/search-field'
 import { Skeleton } from '@/components/arc/skeleton/skeleton'
 import { InstitutionMark } from '@/components/admin/institution-mark'
-import { describeError } from '@/lib/errors'
-import { createInstitution, plural } from '@/lib/hnt-admin'
+import { plural } from '@/lib/hnt-admin'
 import { reloadInstitutions, useInstitutions } from '@/lib/use-institutions'
 
 export const Route = createFileRoute('/_panel/instituciones/')({
@@ -21,7 +18,7 @@ export const Route = createFileRoute('/_panel/instituciones/')({
 function InstitutionsPage() {
   const { institutions, loading, loaded, error } = useInstitutions()
   const [search, setSearch] = useState('')
-  const [creating, setCreating] = useState(false)
+  const navigate = useNavigate()
 
   const filtered = useMemo(() => {
     const term = search.trim().toLocaleLowerCase('es')
@@ -36,7 +33,7 @@ function InstitutionsPage() {
           <h1 className="font-heading text-(length:--text-3xl) leading-(--leading-display) font-medium tracking-(--tracking-display)">Instituciones</h1>
           <p className="text-(--text-secondary)">Códigos de invitación, nóminas y roles de cada institución.</p>
         </div>
-        <Button onClick={() => setCreating(true)}>Nueva institución</Button>
+        <Button onClick={() => void navigate({ to: '/instituciones/preparar' })}>Nueva institución</Button>
       </div>
 
       <Alert tone="danger" title="No pudimos cargar las instituciones" open={!!error}>
@@ -50,8 +47,8 @@ function InstitutionsPage() {
         <EmptyState
           icon={<Building2 />}
           title="Todavía no hay instituciones"
-          description="Crea la primera para generar su código y cargar su nómina."
-          action={<Button variant="secondary" onClick={() => setCreating(true)}>Nueva institución</Button>}
+          description="Crea la primera: el asistente te lleva por el código, la nómina y lo demás."
+          action={<Button variant="secondary" onClick={() => void navigate({ to: '/instituciones/preparar' })}>Nueva institución</Button>}
         />
       )}
 
@@ -74,6 +71,7 @@ function InstitutionsPage() {
                     {!!institution.fullName && <span className="truncate text-(length:--text-sm) text-(--text-secondary)">{institution.fullName}</span>}
                   </span>
                   <span className="hidden items-center gap-2 sm:flex">
+                    {institution.closure?.active && <Badge size="sm" tone="warning">Cerrada</Badge>}
                     {institution.rosterCount === 0 && <Badge size="sm">Nómina vacía</Badge>}
                     {!institution.hasInviteCode && <Badge size="sm">Sin código</Badge>}
                     {institution.rosterCount > 0 && <span className="w-28 text-right whitespace-nowrap text-(length:--text-sm) tabular-nums text-(--text-secondary)">{plural(institution.rosterCount, 'persona', 'personas')}</span>}
@@ -87,53 +85,6 @@ function InstitutionsPage() {
         </div>
       )}
 
-      <CreateInstitutionDialog open={creating} onOpenChange={setCreating} />
     </div>
-  )
-}
-
-function CreateInstitutionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
-  const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-    if (name.trim().length < 2) {
-      setError('Escribe el nombre corto de la institución.')
-      return
-    }
-    setBusy(true)
-    setError(null)
-    try {
-      const id = await createInstitution(name.trim(), fullName.trim())
-      await reloadInstitutions()
-      onOpenChange(false)
-      setName('')
-      setFullName('')
-      void navigate({ to: '/instituciones/$institutionId', params: { institutionId: id } })
-    } catch (failure) {
-      setError(describeError(failure, 'No pudimos crear la institución.'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={next => { if (!busy) onOpenChange(next) }}>
-      <DialogContent title="Nueva institución" description="Después podrás generar su código y cargar su nómina.">
-        <form onSubmit={submit} className="flex flex-col gap-4">
-          <Input label="Nombre corto" value={name} onChange={event => setName(event.target.value)} placeholder="LCH Temuco" disabled={busy} autoFocus />
-          <Input label="Nombre completo (opcional)" value={fullName} onChange={event => setFullName(event.target.value)} placeholder="Liceo Camilo Henríquez de Temuco" disabled={busy} />
-          <Alert tone="danger" title="No se creó la institución" open={!!error}>{error}</Alert>
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={busy}>Cancelar</Button>
-            <Button type="submit" loading={busy}>Crear institución</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   )
 }
