@@ -55,10 +55,10 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: 9 },
   tile: { flex: 1, padding: 11, borderRadius: 12, backgroundColor: TILE },
   footer: { position: 'absolute', left: 48, right: 48, bottom: 26, flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 0.75, borderTopColor: LINE, paddingTop: 9, fontSize: 8.25, color: SECONDARY },
-  step: { flexDirection: 'row', gap: 13, paddingVertical: 7.5, borderBottomWidth: 0.75, borderBottomColor: LINE },
+  step: { flexDirection: 'row', gap: 13, paddingVertical: 4.5, borderBottomWidth: 0.75, borderBottomColor: LINE },
   stepNumber: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   stepTitle: { fontSize: 11.25, fontWeight: 700, marginBottom: 2 },
-  stepBody: { color: BODY, lineHeight: '14pt' },
+  stepBody: { color: BODY, lineHeight: '13pt' },
 })
 
 /** El logotipo HaNet (Figma, componente "HaNet"): isotipo rosa y texto gris. */
@@ -129,7 +129,7 @@ function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]?.toUpperCase()).join('')
 }
 
-function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: InscriptionData; shield: string | null; qrApp: string; qrDocs: string; issuedAt: number }) {
+function InscriptionDocument({ data, shield, qrs, issuedAt }: { data: InscriptionData; shield: string | null; qrs: { app: string; panel: string; docs: string }; issuedAt: number }) {
   const { institution, words, admins, roster } = data
   const city = CITIES.find(item => item.id === institution.cityId)?.name
   const year = institution.schoolYear
@@ -149,18 +149,21 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
   ]
 
   const steps: [string, string][] = [
-    ['Activar cuentas de administración', `Crea tu HaNet ID en app.hanet.muxp.art, escribe el código de invitación y comprueba tu correo institucional (el que aparece en Administración).${admins.length ? ' Tu cuenta ya cuenta con rol Admin.' : ''}`],
-    ['Entra al panel web', 'Con tu HaNet ID activo, entra a panel.hanet.muxp.art y comprueba que la información de tu institución en el panel sea correcta.'],
-    ['Da roles a tu equipo', 'Cuando cada persona se une, en Personas y roles le das su rol: docentes, asistentes, CEE y la directiva de cada curso. Puedes agregar personas fuera de la nómina base desde Cargar nómina, en el mismo panel.'],
+    ['Activar cuentas de administración', `Crea tu HaNet ID en app.hanet.muxp.art, escribe el código de invitación y comprueba tu correo institucional (el que aparece en Administración).${admins.length ? ' Tu cuenta ya tiene el rol Admin.' : ''}`],
+    ['Entra al panel web', 'Con tu HaNet ID activo, entra a panel.hanet.muxp.art y comprueba que la información de tu institución sea correcta. Cada inicio de sesión pide un código que llega a tu correo.'],
+    ['Protege tu cuenta', 'En Seguridad, dentro del panel, agrega una app de autenticación y guarda tus códigos de respaldo. Así entras aunque no tengas el correo a mano.'],
+    ['Da roles a tu equipo', 'Cuando cada persona se une, en Personas y roles le das su rol: docentes, CEE y la directiva de cada curso. Si falta alguien en la nómina base, súmalo en Cargar nómina.'],
     ['Clases y horario', 'Cada docente crea en ClassHall un Hall por asignatura y curso. La directiva de cada curso arma su horario en el Calendar.'],
-    ['Centros de Estudiantes', 'Los CEE son parte esencial de HaNet: ellos podrán manejar Feed, Eventos de institución, Alianzas, etc. Oriéntalos a crear su HaNet ID y asígnales sus roles en Personas y roles, dentro del panel.'],
+    ['Centros de Estudiantes', 'Los CEE son parte esencial de HaNet: ellos podrán manejar Feed, Eventos de institución, Alianzas, etc. Oriéntalos a crear su HaNet ID y asígnales su rol en Personas y roles.'],
+    ['Días sin clases', 'Si se suspenden las clases o hay salida anticipada, márcalo en el Calendar de la app: las pruebas de ese día pasan solas a la clase siguiente.'],
     ['Invita a los estudiantes', 'Cuando tu comunidad esté lista, comparte el código en clases o por los canales del liceo, nunca en redes públicas. Cada estudiante se une con su correo institucional.'],
+    ['Mantén informada a tu comunidad', 'Desde Organizar, en la app, manda avisos a todo el liceo, a una jornada o a cursos, y publica los eventos de la institución.'],
   ]
 
   const footer = (page: number) => (
     <View style={styles.footer} fixed>
       <Text>Equipo HaNet · muxp@muxp.art · hanet.muxp.art</Text>
-      <Text>Documento confidencial del liceo · {page} de 2</Text>
+      <Text>Documento confidencial de HaNet y {institution.name} · {page} de 2</Text>
     </View>
   )
 
@@ -201,7 +204,7 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
 
         <View style={styles.code} wrap={false}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
-            <Text style={{ fontSize: 12, fontWeight: 700 }}>Códigos de invitación</Text>
+            <Text style={{ fontSize: 12, fontWeight: 700 }}>Código de invitación</Text>
             {data.generatedAt && <Text style={{ fontSize: 9, color: '#dddde2' }}>Generado el {longDate(data.generatedAt)}, {new Date(data.generatedAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</Text>}
           </View>
           {words
@@ -209,7 +212,7 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
             : <Text style={{ fontFamily: 'Google Sans Flex', fontWeight: 700, fontSize: 20, marginBottom: 10 }}>La frase se entregó al generarla</Text>}
           <Text style={{ fontSize: 9.75, lineHeight: '14pt', color: '#dddde2' }}>
             {words
-              ? 'Con estas cuatro palabras, las personas de la nómina se unen a su liceo desde la app. Si estos códigos se pierden o se filtran, entra a panel.hanet.muxp.art con una cuenta de administración y genera otro en Mi institución, pestaña Código de invitación: el actual deja de funcionar al instante. Quienes ya se unieron no se ven afectados.'
+              ? 'Con estas cuatro palabras, las personas de la nómina se unen a su liceo desde la app. Si este código se pierde o se filtra, entra a panel.hanet.muxp.art con una cuenta de administración y genera otro en Mi institución, pestaña Código de invitación: el actual deja de funcionar al instante. Quienes ya se unieron no se ven afectados.'
               : 'Por seguridad, HaNet no guarda la frase: aparece solo en el documento que se descargó al generarla. Si se perdió, la administración del liceo o el equipo HaNet generan otra desde el panel.'}
           </Text>
         </View>
@@ -217,10 +220,19 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
         <View style={styles.section} wrap={false}>
           <Text style={styles.h2}>Webs de HaNet</Text>
           <View style={styles.tiles}>
-            {[['App web', 'app.hanet.muxp.art'], ['Panel web', 'panel.hanet.muxp.art'], ['Guías y docs', 'docs.hanet.muxp.art']].map(([title, url]) => (
-              <View key={title} style={styles.tile}>
-                <Text style={{ fontWeight: 700 }}>{title}</Text>
-                <Text style={{ color: SECONDARY, marginTop: 2 }}>{url}</Text>
+            {[
+              [qrs.app, 'App web', 'app.hanet.muxp.art'],
+              [qrs.panel, 'Panel web', 'panel.hanet.muxp.art'],
+              [qrs.docs, 'Guías y docs', 'docs.hanet.muxp.art'],
+            ].map(([qr, title, url]) => (
+              <View key={title} style={[styles.tile, { flexDirection: 'row', alignItems: 'center', gap: 9, padding: 9 }]}>
+                <View style={{ padding: 3, borderRadius: 7, backgroundColor: '#ffffff' }}>
+                  <Image src={qr} style={{ width: 44, height: 44 }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: 700 }}>{title}</Text>
+                  <Text style={{ color: SECONDARY, marginTop: 2, fontSize: 8.25 }}>{url}</Text>
+                </View>
               </View>
             ))}
           </View>
@@ -233,7 +245,7 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
           <HanetLogotype />
           <Text style={{ fontSize: 9, fontWeight: 700 }}>{institution.name}</Text>
         </View>
-        <View style={{ marginTop: 20, gap: 4 }}>
+        <View style={{ marginTop: 14, gap: 4 }}>
           <Text style={styles.display}>Primeros pasos</Text>
           <Text style={{ fontSize: 10.5, color: SECONDARY }}>Empieza a usar HaNet en tu institución.</Text>
         </View>
@@ -252,25 +264,7 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
           ))}
         </View>
 
-        <View style={[styles.tiles, { marginTop: 16, gap: 12 }]} wrap={false}>
-          {[
-            [qrApp, 'Abre HaNet', 'app.hanet.muxp.art', 'En iPhone, agrégala a la pantalla de inicio desde Safari.'],
-            [qrDocs, 'Guía para liceos', 'docs.hanet.muxp.art/liceos', 'Cada módulo y cada rol, paso a paso.'],
-          ].map(([qr, title, url, note]) => (
-            <View key={title} style={[styles.tile, { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 13, borderRadius: 15 }]}>
-              <View style={{ padding: 4, borderRadius: 9, backgroundColor: '#ffffff' }}>
-                <Image src={qr} style={{ width: 58, height: 58 }} />
-              </View>
-              <View style={{ flex: 1, gap: 1.5 }}>
-                <Text style={{ fontWeight: 700 }}>{title}</Text>
-                <Text style={{ color: SECONDARY }}>{url}</Text>
-                <Text style={{ color: SECONDARY, lineHeight: '12.5pt' }}>{note}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <View style={{ marginTop: 12, padding: 14, borderRadius: 15, borderWidth: 0.75, borderColor: LINE }} wrap={false}>
+        <View style={{ marginTop: 12, padding: 12, borderRadius: 15, borderWidth: 0.75, borderColor: LINE }} wrap={false}>
           <Text style={{ fontSize: 11.25, fontWeight: 700, marginBottom: 4 }}>¿Algo no funciona?</Text>
           <Text style={styles.stepBody}>Escríbenos a muxp@muxp.art. El estado de HaNet y las mantenciones están en status.hanet.muxp.art. La nómina tiene datos de menores de edad: compártela solo con el equipo HaNet y por un medio privado.</Text>
         </View>
@@ -284,12 +278,13 @@ function InscriptionDocument({ data, shield, qrApp, qrDocs, issuedAt }: { data: 
 export async function downloadInscriptionPdf(data: InscriptionData) {
   registerFonts()
   const issuedAt = Date.now()
-  const [shield, qrApp, qrDocs] = await Promise.all([
+  const [shield, app, panel, docs] = await Promise.all([
     shieldPng(data.institution.logoUrl),
     qrPng('https://app.hanet.muxp.art'),
+    qrPng('https://panel.hanet.muxp.art'),
     qrPng('https://docs.hanet.muxp.art/liceos/'),
   ])
-  const blob = await pdf(<InscriptionDocument data={data} shield={shield} qrApp={qrApp} qrDocs={qrDocs} issuedAt={issuedAt} />).toBlob()
+  const blob = await pdf(<InscriptionDocument data={data} shield={shield} qrs={{ app, panel, docs }} issuedAt={issuedAt} />).toBlob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
