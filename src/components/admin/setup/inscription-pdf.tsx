@@ -282,7 +282,7 @@ export async function downloadInscriptionPdf(data: InscriptionData) {
     shieldPng(data.institution.logoUrl),
     qrPng('https://app.hanet.muxp.art'),
     qrPng('https://panel.hanet.muxp.art'),
-    qrPng('https://docs.hanet.muxp.art/liceos/'),
+    qrPng('https://docs.hanet.muxp.art/'),
   ])
   const blob = await pdf(<InscriptionDocument data={data} shield={shield} qrs={{ app, panel, docs }} issuedAt={issuedAt} />).toBlob()
   const url = URL.createObjectURL(blob)
